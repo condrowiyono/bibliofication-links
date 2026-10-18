@@ -7,6 +7,7 @@
  *
  * Nothing here imports Cloudflare, so the parsers can be run and tested in plain Node.
  */
+import type { Book } from "./site";
 import { cleanIsbn, isValidIsbn10, isValidIsbn13, parseIsbn, toIsbn10, toIsbn13 } from "./isbn";
 
 export type StoreLink = { label: "Goodreads" | "Amazon" | "Gramedia"; url: string; exact: boolean };
@@ -386,4 +387,28 @@ export async function lookupBook(query: string, opts: LookupOptions = {}): Promi
   const [goodreads, gramedia] = await Promise.all([resolveGoodreads(f, book), resolveGramedia(f, book)]);
   book.links = links.map((l) => (l.label === "Goodreads" && goodreads) || (l.label === "Gramedia" && gramedia) || l);
   return book;
+}
+
+/** A book's catalogue fields, shaped exactly like a book in data/links.json (minus her own rating, review and status). */
+export type BookInfo = Pick<
+  Book,
+  "title" | "author" | "cover" | "synopsis" | "isbn13" | "isbn10" | "publisher" | "published" | "edition" | "pages" | "language" | "links"
+>;
+
+/** Drops the lookup's working fields. Links to a store's search page instead of the book say "(search)". */
+export function toBookInfo(c: BookCandidate): BookInfo {
+  return {
+    title: c.title,
+    author: c.author,
+    cover: c.cover,
+    synopsis: c.synopsis,
+    isbn13: c.isbn13,
+    isbn10: c.isbn10,
+    publisher: c.publisher,
+    published: c.published,
+    edition: c.edition,
+    pages: c.pages,
+    language: c.language,
+    links: c.links.map((l) => ({ label: l.exact ? l.label : `${l.label} (search)`, url: l.url })),
+  };
 }

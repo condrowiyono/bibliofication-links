@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Book } from "@/lib/site";
-import type { BookCandidate } from "@/lib/bookLookup";
+import type { BookInfo } from "@/lib/bookLookup";
 
 async function api<T>(params: Record<string, string>): Promise<T> {
   const res = await fetch(`/api/books/lookup?${new URLSearchParams(params)}`);
@@ -12,32 +12,13 @@ async function api<T>(params: Record<string, string>): Promise<T> {
 }
 
 /** Full details for one book: by ISBN when we have one, otherwise by title and author. */
-export async function fetchBookDetails(c: { isbn13?: string; title: string; author?: string }): Promise<BookCandidate | null> {
+export async function fetchBookDetails(c: { isbn13?: string; title: string; author?: string }): Promise<BookInfo | null> {
   const book = c.isbn13 || `${c.title} ${c.author ?? ""}`.trim();
-  return (await api<{ book: BookCandidate | null }>({ book })).book;
-}
-
-/** The lookup result as Book fields. Store links get a label only; search-page links say so. */
-export function candidateToBook(c: BookCandidate): Omit<Book, "id" | "status" | "rating" | "finished" | "review" | "quote" | "visible"> {
-  return {
-    title: c.title,
-    author: c.author,
-    cover: c.cover,
-    synopsis: c.synopsis,
-    isbn13: c.isbn13,
-    isbn10: c.isbn10,
-    publisher: c.publisher,
-    published: c.published,
-    edition: c.edition,
-    pages: c.pages,
-    language: c.language,
-    links: c.links.map((l) => ({ label: l.exact ? l.label : `${l.label} (search)`, url: l.url })),
-  };
+  return (await api<{ book: BookInfo | null }>({ book })).book;
 }
 
 /** Fills only what's empty, so her own edits are never overwritten. Adds store links she doesn't have yet. */
-export function fillMissing(book: Book, c: BookCandidate): Partial<Book> {
-  const found = candidateToBook(c);
+export function fillMissing(book: Book, found: BookInfo): Partial<Book> {
   const patch: Partial<Book> = {};
   for (const k of ["title", "author", "cover", "synopsis", "isbn13", "isbn10", "publisher", "published", "edition", "language"] as const)
     if (!book[k] && found[k]) patch[k] = found[k];
@@ -49,9 +30,9 @@ export function fillMissing(book: Book, c: BookCandidate): Partial<Book> {
 }
 
 /** Search box with suggestions as you type. Picking one fetches the full details and hands them to onPick. */
-export function BookFinder({ onPick }: { onPick: (c: BookCandidate) => void }) {
+export function BookFinder({ onPick }: { onPick: (c: BookInfo) => void }) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<BookCandidate[]>([]);
+  const [results, setResults] = useState<BookInfo[]>([]);
   const [status, setStatus] = useState<"idle" | "searching" | "loading" | "error">("idle");
   const [message, setMessage] = useState("");
   const seq = useRef(0);
@@ -65,7 +46,7 @@ export function BookFinder({ onPick }: { onPick: (c: BookCandidate) => void }) {
     const t = setTimeout(async () => {
       setStatus("searching");
       try {
-        const { results } = await api<{ results: BookCandidate[] }>({ q });
+        const { results } = await api<{ results: BookInfo[] }>({ q });
         if (id !== seq.current) return;
         setResults(results);
         setStatus("idle");
@@ -79,7 +60,7 @@ export function BookFinder({ onPick }: { onPick: (c: BookCandidate) => void }) {
     return () => clearTimeout(t);
   }, [query]);
 
-  const pick = async (c: BookCandidate) => {
+  const pick = async (c: BookInfo) => {
     setStatus("loading");
     setMessage(`Getting details and store links for "${c.title}"…`);
     try {

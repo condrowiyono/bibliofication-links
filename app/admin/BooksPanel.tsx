@@ -3,7 +3,7 @@
 import { BOOK_STATUSES, STATUS_LABEL, type Book, type BookStatus } from "@/lib/site";
 import { useState } from "react";
 import { Field } from "./Field";
-import { BookFinder, candidateToBook, fetchBookDetails, fillMissing } from "./BookFinder";
+import { BookFinder, fetchBookDetails, fillMissing } from "./BookFinder";
 
 const slugify = (s: string) =>
   s
@@ -51,8 +51,7 @@ export function BooksPanel({ books, onChange }: { books: Book[]; onChange: (book
         edition details come from the book&apos;s public listing.
       </p>
       <BookFinder
-        onPick={(c) => {
-          const found = candidateToBook(c);
+        onPick={(found) => {
           const base = slugify(found.title);
           let id = base;
           for (let n = 2; books.some((b) => b.id === id); n++) id = `${base}-${n}`;
