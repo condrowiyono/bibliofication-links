@@ -1,0 +1,371 @@
+/* The editor is a working tool: same paper and ink as the page, none of the shelf decoration. */
+.admin {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 16px 16px 120px;
+}
+
+.admin h1 {
+  margin: 0;
+  font-family: var(--font-fell), Georgia, serif;
+  font-weight: 400;
+  font-size: 1.9rem;
+  line-height: 1.2;
+}
+
+.admin h2 {
+  margin: 0 0 4px;
+  font-family: var(--font-fell), Georgia, serif;
+  font-weight: 400;
+  font-size: 1.4rem;
+}
+
+.admin-note {
+  margin: 0 0 12px;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.admin-error {
+  margin: 8px 0 0;
+  padding: 0;
+  color: var(--wax);
+  font-size: 0.9rem;
+  list-style: none;
+}
+
+.admin code {
+  font-size: 0.85em;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--matcha-tint);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--matcha);
+  border-color: var(--matcha);
+  color: var(--on-matcha);
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--matcha);
+  box-shadow: 2px 2px 0 var(--line);
+}
+
+.btn-quiet {
+  min-height: 44px;
+  padding: 0 10px;
+  border-color: transparent;
+  background: transparent;
+  font-size: 0.875rem;
+}
+
+.btn-danger {
+  color: var(--wax);
+}
+
+.login {
+  max-width: 24rem;
+  margin: 12vh auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.login h1 {
+  margin-bottom: 12px;
+}
+
+.login input {
+  min-height: 44px;
+}
+
+.admin-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-bar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+.tab {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+
+.tab[aria-selected="true"] {
+  border-color: var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.panel {
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.field-narrow {
+  flex: 0 0 9rem;
+}
+
+.admin input[type="text"],
+.admin input[type="password"],
+.admin input[type="number"],
+.admin select,
+.admin textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.admin textarea {
+  resize: vertical;
+}
+
+.json {
+  min-height: 60vh;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.85rem !important;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.row > .btn {
+  margin-bottom: 12px;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.link-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.link-item {
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+}
+
+.link-item-header {
+  background: var(--matcha-tint);
+}
+
+.link-item-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.flag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--wax);
+  color: var(--wax);
+  font-size: 0.8rem;
+}
+
+.product-edit {
+  display: flex;
+  gap: 12px;
+}
+
+.product-fields {
+  flex: 1;
+  min-width: 0;
+}
+
+.thumb {
+  flex: 0 0 72px;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin-top: 22px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--matcha-tint);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 0.95rem;
+}
+
+.checks label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.checks input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--matcha);
+}
+
+/* Save stays in reach while scrolling a long list of links */
+.savebar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px max(16px, calc((100vw - 46rem) / 2 + 16px));
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.savebar-status {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.savebar-status .admin-error {
+  margin: 0;
+  max-height: 6rem;
+  overflow-y: auto;
+}
+
+@media (max-width: 560px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+  .field-narrow {
+    flex: 1;
+  }
+  .product-edit {
+    flex-direction: column;
+  }
+  .thumb {
+    margin-top: 0;
+  }
+  .savebar {
+    flex-wrap: wrap;
+  }
+  .savebar-status {
+    flex-basis: 100%;
+  }
+  .savebar .btn {
+    flex: 1;
+  }
+}

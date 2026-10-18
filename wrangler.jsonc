@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bey-links",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "kv_namespaces": [
+    // Holds the whole page as one JSON document (key "site") plus a cached Medium feed.
+    // No id: `wrangler deploy` creates the namespace on first deploy.
+    { "binding": "LINKS_KV" }
+  ]
+}

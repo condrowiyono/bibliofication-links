@@ -1,0 +1,167 @@
+{
+  "profile": {
+    "name": "Bey",
+    "handle": "@bibliofication",
+    "avatar": "https://cdn-images-1.medium.com/fit/c/300/300/1*rEpqRLXI8ot1211EyC1JCg.jpeg",
+    "bio": "Bookworm with a Kindle in one hand and matcha in the other. I write about life, love and the books in between.",
+    "shelf": [
+      "Books",
+      "Kindle",
+      "Harry Potter",
+      "K-pop",
+      "Matcha"
+    ]
+  },
+  "socials": [
+    {
+      "platform": "instagram",
+      "url": "https://www.instagram.com/bibliofication/"
+    },
+    {
+      "platform": "tiktok",
+      "url": "https://www.tiktok.com/@bethanielle"
+    },
+    {
+      "platform": "threads",
+      "url": "https://www.threads.com/@bibliofication"
+    },
+    {
+      "platform": "x",
+      "url": "https://x.com/bethanielle"
+    },
+    {
+      "platform": "medium",
+      "url": "https://medium.com/@bethanious"
+    }
+  ],
+  "shop": {
+    "title": "Shop my picks",
+    "stores": {
+      "shopee": "",
+      "tiktok": ""
+    },
+    "items": []
+  },
+  "links": [
+    {
+      "id": "h-read",
+      "type": "header",
+      "title": "Read with me",
+      "visible": true
+    },
+    {
+      "id": "bookstagram",
+      "type": "link",
+      "title": "Bookstagram",
+      "subtitle": "@bibliofication on Instagram",
+      "url": "https://www.instagram.com/bibliofication/",
+      "icon": "instagram",
+      "featured": false,
+      "visible": true
+    },
+    {
+      "id": "threads",
+      "type": "link",
+      "title": "Threads",
+      "subtitle": "Books, films and late-night watchlists",
+      "url": "https://www.threads.com/@bibliofication",
+      "icon": "threads",
+      "featured": false,
+      "visible": true
+    },
+    {
+      "id": "tiktok",
+      "type": "link",
+      "title": "TikTok",
+      "subtitle": "@bethanielle",
+      "url": "https://www.tiktok.com/@bethanielle",
+      "icon": "tiktok",
+      "featured": false,
+      "visible": true
+    },
+    {
+      "id": "x",
+      "type": "link",
+      "title": "X",
+      "subtitle": "@bethanielle",
+      "url": "https://x.com/bethanielle",
+      "icon": "x",
+      "featured": false,
+      "visible": true
+    },
+    {
+      "id": "h-write",
+      "type": "header",
+      "title": "Things I write",
+      "visible": true
+    },
+    {
+      "id": "medium",
+      "type": "link",
+      "title": "Essays on Medium",
+      "subtitle": "Reflections on growing up, love and self, in Bahasa Indonesia and English",
+      "url": "https://medium.com/@bethanious",
+      "icon": "medium",
+      "featured": false,
+      "visible": true
+    },
+    {
+      "id": "personal-ig",
+      "type": "link",
+      "title": "Personal Instagram",
+      "subtitle": "@bethanious",
+      "url": "https://www.instagram.com/bethanious/",
+      "icon": "instagram",
+      "featured": false,
+      "visible": true
+    },
+    {
+      "id": "h-kpop",
+      "type": "header",
+      "title": "K-pop corner",
+      "visible": true
+    },
+    {
+      "id": "trophy-count",
+      "type": "link",
+      "title": "Trophy Count",
+      "subtitle": "Who won the most K-pop awards since 2020",
+      "url": "https://kpop.bethanielle.me/",
+      "icon": "",
+      "featured": false,
+      "visible": true
+    },
+    {
+      "id": "h-hi",
+      "type": "header",
+      "title": "Say hi",
+      "visible": true
+    },
+    {
+      "id": "dear-my-love",
+      "type": "link",
+      "title": "Dear My Love",
+      "subtitle": "A little something, made with love",
+      "url": "https://hi.bethanielle.me/",
+      "icon": "",
+      "featured": false,
+      "visible": true
+    },
+    {
+      "id": "ngl",
+      "type": "link",
+      "title": "Ask me anything",
+      "subtitle": "Anonymous questions on NGL",
+      "url": "https://ngl.link/bethaniene",
+      "icon": "",
+      "featured": false,
+      "visible": true
+    }
+  ],
+  "medium": {
+    "username": "bethanious",
+    "show": true,
+    "count": 3
+  },
+  "footer": "Mischief managed."
+}
