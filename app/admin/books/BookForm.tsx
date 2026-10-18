@@ -240,28 +240,43 @@ export function BookForm({ book, isNew }: { book: Book; isNew: boolean }) {
           </Card>
         </Collapsible>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Where to find it</CardTitle>
-            <CardDescription>Gramedia, Goodreads, Amazon… Links labelled “(search)” open a search on that store.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {links.map((l, j) => (
-              <div key={j} className="grid gap-2 rounded-lg border p-3">
-                <div className="flex items-center gap-2">
-                  <Input aria-label="Label" placeholder="Store" value={l.label} onChange={(e) => setLink(j, { label: e.target.value })} />
-                  <Button variant="ghost" size="icon" aria-label={`Remove ${l.label || "link"}`} onClick={() => f.set({ links: links.filter((_, k) => k !== j) })}>
-                    <X />
+        <Collapsible defaultOpen={isNew || links.length === 0}>
+          <Card className="gap-0">
+            <CardHeader>
+              <CardTitle>Where to find it</CardTitle>
+              <CardDescription>
+                {links.length
+                  ? links.map((l) => l.label || "Untitled").join(" · ")
+                  : "Gramedia, Goodreads, Amazon… Links labelled “(search)” open a search on that store."}
+              </CardDescription>
+              <CardAction>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="icon-sm" aria-label="Show or hide store links" className="group">
+                    <ChevronDown className="transition-transform group-data-[state=open]:rotate-180" />
                   </Button>
-                </div>
-                <Input aria-label="URL" type="url" inputMode="url" autoCapitalize="none" placeholder="https://…" value={l.url} onChange={(e) => setLink(j, { url: e.target.value.trim() })} />
-              </div>
-            ))}
-            <Button variant="outline" onClick={() => f.set({ links: [...links, { label: "", url: "" }] })}>
-              <Plus /> Add store link
-            </Button>
-          </CardContent>
-        </Card>
+                </CollapsibleTrigger>
+              </CardAction>
+            </CardHeader>
+            <CollapsibleContent>
+              <CardContent className="grid gap-3 pt-5">
+                {links.map((l, j) => (
+                  <div key={j} className="grid gap-2 rounded-lg border p-3">
+                    <div className="flex items-center gap-2">
+                      <Input aria-label="Label" placeholder="Store" value={l.label} onChange={(e) => setLink(j, { label: e.target.value })} />
+                      <Button variant="ghost" size="icon" aria-label={`Remove ${l.label || "link"}`} onClick={() => f.set({ links: links.filter((_, k) => k !== j) })}>
+                        <X />
+                      </Button>
+                    </div>
+                    <Input aria-label="URL" type="url" inputMode="url" autoCapitalize="none" placeholder="https://…" value={l.url} onChange={(e) => setLink(j, { url: e.target.value.trim() })} />
+                  </div>
+                ))}
+                <Button variant="outline" onClick={() => f.set({ links: [...links, { label: "", url: "" }] })}>
+                  <Plus /> Add store link
+                </Button>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         <Card>
           <CardContent>
