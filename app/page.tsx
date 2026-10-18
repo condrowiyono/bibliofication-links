@@ -54,15 +54,17 @@ export default async function Home() {
 
       {profile.shelf.length > 0 && (
         <section className="shelf" aria-label="Things I love">
-          {profile.shelf.map((word, i) =>
-            isDrink(word) ? (
-              <TeaCup key={word} label={word} />
-            ) : (
+          {/* Books in her order, then the cup(s) at the right end of the shelf. */}
+          {profile.shelf
+            .filter((word) => !isDrink(word))
+            .map((word, i) => (
               <span key={word} className={`spine spine-${i % 5}`}>
                 {word}
               </span>
-            ),
-          )}
+            ))}
+          {profile.shelf.filter(isDrink).map((word) => (
+            <TeaCup key={word} label={word} />
+          ))}
         </section>
       )}
 

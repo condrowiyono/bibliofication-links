@@ -186,7 +186,7 @@ function ShelfInput({ words, onChange }: { words: string[]; onChange: (w: string
     setDraft("");
   };
   return (
-    <FormField id="shelf" label="Shelf" hint="One book spine per word; drinks like Matcha or Tea become a cup.">
+    <FormField id="shelf" label="Shelf" hint="One book spine per word; drinks like Matcha or Tea become a cup at the right end.">
       <div className="flex flex-wrap gap-2 rounded-md border border-input bg-background p-2">
         {words.map((w) => (
           <span key={w} className="inline-flex h-8 items-center gap-1 rounded-full bg-secondary pr-1 pl-3 text-sm">
