@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { Book } from "@/lib/site";
+import * as React from "react";
+import { BookOpen, Loader2, Search } from "lucide-react";
 import type { BookInfo } from "@/lib/bookLookup";
+import type { Book } from "@/lib/site";
+import { Input } from "@/components/ui/input";
 
 async function api<T>(params: Record<string, string>): Promise<T> {
   const res = await fetch(`/api/books/lookup?${new URLSearchParams(params)}`);
@@ -30,16 +32,16 @@ export function fillMissing(book: Book, found: BookInfo): Partial<Book> {
 }
 
 /** Search box with suggestions as you type. Picking one fetches the full details and hands them to onPick. */
-export function BookFinder({ onPick }: { onPick: (c: BookInfo) => void }) {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<BookInfo[]>([]);
-  const [status, setStatus] = useState<"idle" | "searching" | "loading" | "error">("idle");
-  const [message, setMessage] = useState("");
-  const seq = useRef(0);
-  // Short queries show nothing, without clearing state from inside the effect.
-  const shown = query.trim().length >= 3 ? results : [];
+export function BookFinder({ onPick }: { onPick: (b: BookInfo) => void }) {
+  const [query, setQuery] = React.useState("");
+  const [results, setResults] = React.useState<BookInfo[]>([]);
+  const [status, setStatus] = React.useState<"idle" | "searching" | "loading" | "error">("idle");
+  const [message, setMessage] = React.useState("");
+  const seq = React.useRef(0);
+  const short = query.trim().length < 3;
+  const shown = short ? [] : results;
 
-  useEffect(() => {
+  React.useEffect(() => {
     const q = query.trim();
     const id = ++seq.current;
     if (q.length < 3) return;
@@ -60,15 +62,13 @@ export function BookFinder({ onPick }: { onPick: (c: BookInfo) => void }) {
     return () => clearTimeout(t);
   }, [query]);
 
-  const pick = async (c: BookInfo) => {
+  const pick = async (b: BookInfo) => {
     setStatus("loading");
-    setMessage(`Getting details and store links for "${c.title}"…`);
+    setMessage(`Getting details and store links for "${b.title}"…`);
     try {
-      onPick((await fetchBookDetails(c)) ?? c);
-      setQuery("");
-      setResults([]);
-      setMessage("");
+      onPick((await fetchBookDetails(b)) ?? b);
       setStatus("idle");
+      setMessage("");
     } catch (e) {
       setStatus("error");
       setMessage((e as Error).message);
@@ -76,33 +76,43 @@ export function BookFinder({ onPick }: { onPick: (c: BookInfo) => void }) {
   };
 
   return (
-    <div className="book-finder">
-      <label className="field">
-        <span>Find a book by title or ISBN</span>
-        <input
-          type="text"
+    <div className="grid gap-2">
+      <div className="relative">
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+        <Input
+          type="search"
           value={query}
-          placeholder="e.g. Laut Bercerita or 9786024246945"
+          placeholder="Title or ISBN, e.g. Laut Bercerita"
+          aria-label="Find a book by title or ISBN"
           onChange={(e) => setQuery(e.target.value)}
           disabled={status === "loading"}
           autoComplete="off"
+          className="pl-9"
+          autoFocus
         />
-      </label>
-      {status === "searching" && <p className="admin-note">Searching…</p>}
-      {message && <p className={status === "error" ? "admin-error" : "admin-note"}>{message}</p>}
+        {(status === "searching" || status === "loading") && (
+          <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" aria-label="Loading" />
+        )}
+      </div>
+      {message && !short && <p className={status === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}>{message}</p>}
       {shown.length > 0 && (
-        <ul className="finder-results">
+        <ul className="divide-y overflow-hidden rounded-xl border bg-card">
           {shown.map((r, i) => (
             <li key={`${r.isbn13}-${i}`}>
-              <button type="button" onClick={() => pick(r)} disabled={status === "loading"}>
-                <span className="thumb thumb-finder">
+              <button
+                type="button"
+                onClick={() => pick(r)}
+                disabled={status === "loading"}
+                className="flex w-full items-center gap-3 p-3 text-left hover:bg-accent disabled:opacity-50"
+              >
+                <span className="flex h-16 w-11 shrink-0 items-center justify-center overflow-hidden rounded border bg-accent">
                   {/* eslint-disable-next-line @next/next/no-img-element -- remote cover preview */}
-                  {r.cover ? <img src={r.cover} alt="" loading="lazy" /> : <span>?</span>}
+                  {r.cover ? <img src={r.cover} alt="" loading="lazy" className="size-full object-cover" /> : <BookOpen className="size-4 text-muted-foreground" />}
                 </span>
-                <span className="finder-text">
-                  <strong>{r.title}</strong>
-                  <span>{[r.author, r.publisher, r.edition || r.published].filter(Boolean).join(" · ")}</span>
-                  {r.isbn13 && <span className="finder-isbn">ISBN {r.isbn13}</span>}
+                <span className="flex min-w-0 flex-col gap-0.5 text-sm">
+                  <strong className="line-clamp-2 font-medium">{r.title}</strong>
+                  <span className="truncate text-muted-foreground">{[r.author, r.publisher, r.edition || r.published].filter(Boolean).join(" · ")}</span>
+                  {r.isbn13 && <span className="text-xs text-muted-foreground">ISBN {r.isbn13}</span>}
                 </span>
               </button>
             </li>

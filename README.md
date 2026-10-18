@@ -4,7 +4,12 @@ A link-in-bio page for Bey (@bibliofication), in the spirit of Linktree and lynk
 
 - `/`: the page. Bookplate header, her "shelf" of loves as book spines, her Shopee picks, links grouped into sections, and her latest Medium essays.
 - `/books` and `/books/<id>`: her library and one page per book with her review.
-- `/admin`: the editor, behind a password. Edit with a form, or edit the raw JSON directly.
+- `/admin`: the editor, behind a password. Built with shadcn/ui (Tailwind, loaded only on `/admin`) and made for phones first:
+  - **Links**, **Shop**, **Books** and **Profile** tabs (a bottom tab bar on phones, a sidebar on desktop), plus **JSON** for the raw document.
+  - Each list can be reordered by dragging the grip on a row (touch, mouse or keyboard), and has a show/hide switch and a ⋮ menu (move to top/bottom, delete). Tap a row to edit it on its own page; **New** opens `/admin/<tab>/new`.
+  - Everything saves per item: a detail page has its own Save bar, and drag, show/hide and delete save immediately. The server changes only that item, so two open tabs don't overwrite each other.
+  - Deleting asks first (a bottom sheet on phones, a dialog on desktop) and the toast offers Undo. Leaving a page with unsaved edits asks first too.
+  - New books start with a search by title or ISBN that fills in the cover, edition details and store links.
 
 ## The data is one JSON document
 
