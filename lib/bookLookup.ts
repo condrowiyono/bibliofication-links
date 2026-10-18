@@ -8,6 +8,8 @@
  * Nothing here imports Cloudflare, so the parsers can be run and tested in plain Node.
  */
 import type { Book } from "./site";
+import { findCovers, type CoverOption } from "./bookCovers";
+import { getJson, getText, type Fetcher } from "./http";
 import { cleanIsbn, isValidIsbn10, isValidIsbn13, parseIsbn, toIsbn10, toIsbn13 } from "./isbn";
 
 export type StoreLink = { label: "Goodreads" | "Amazon" | "Gramedia"; url: string; exact: boolean };
@@ -29,14 +31,12 @@ export type BookCandidate = {
   /** Where the data came from, e.g. ["openlibrary", "google"]. */
   sources: string[];
   links: StoreLink[];
+  /** Every cover found, best first. Suggestions only carry the catalogues' covers; lookupBook adds and checks the rest. */
+  covers: CoverOption[];
   /** Ids we picked up along the way, used to build exact links without another request. */
   ids: { goodreads?: string; amazon?: string; openlibrary?: string };
 };
 
-type Fetcher = typeof fetch;
-
-const UA = "Mozilla/5.0 (compatible; BeyLinksBookLookup/1.0; +https://bethanielle.me)";
-const TIMEOUT_MS = 7000;
 
 const LANGS: Record<string, string> = {
   ind: "Indonesian",
@@ -73,29 +73,6 @@ const decodeEntities = (s: string) =>
 
 const stripHtml = (s: string) => decodeEntities(s.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")).trim();
 
-async function getJson<T>(f: Fetcher, url: string): Promise<T | null> {
-  try {
-    const res = await f(url, { headers: { "user-agent": UA, accept: "application/json" }, signal: AbortSignal.timeout(TIMEOUT_MS) });
-    if (!res.ok) return null;
-    return (await res.json()) as T;
-  } catch {
-    return null;
-  }
-}
-
-async function getText(f: Fetcher, url: string): Promise<string | null> {
-  try {
-    const res = await f(url, {
-      headers: { "user-agent": UA, accept: "text/html,application/xhtml+xml", "accept-language": "id-ID,id;q=0.9,en;q=0.8" },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-    if (!res.ok) return null;
-    return await res.text();
-  } catch {
-    return null;
-  }
-}
-
 function blank(): BookCandidate {
   return {
     title: "",
@@ -111,6 +88,7 @@ function blank(): BookCandidate {
     synopsis: "",
     sources: [],
     links: [],
+    covers: [],
     ids: {},
   };
 }
@@ -155,6 +133,8 @@ export function fromOpenLibraryDoc(d: OLSearchDoc, preferredIsbn?: string): Book
   c.pages = d.number_of_pages_median ?? 0;
   c.language = langName(d.language?.[0]);
   c.cover = d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg` : "";
+  // The search result's cover belongs to the work, so it may show a different edition.
+  if (c.cover) c.covers = [{ url: c.cover, source: "Open Library", exact: false }];
   c.ids = { goodreads: d.id_goodreads?.[0], amazon: d.id_amazon?.find((a) => /^[A-Z0-9]{10}$/.test(a)), openlibrary: d.key };
   c.sources = ["openlibrary"];
   return c;
@@ -189,6 +169,7 @@ export function fromOpenLibraryEdition(d: OLBooksData, isbn: string): BookCandid
   c.edition = year(d.publish_date);
   c.pages = d.number_of_pages ?? 0;
   c.cover = d.cover?.large ?? d.cover?.medium ?? "";
+  if (c.cover) c.covers = [{ url: c.cover, source: "Open Library", exact: true }];
   c.ids = { goodreads: d.identifiers?.goodreads?.[0], amazon: d.identifiers?.amazon?.[0], openlibrary: d.key };
   c.sources = ["openlibrary"];
   return c;
@@ -230,6 +211,7 @@ export function fromGoogleVolume(v: GBVolume, preferredIsbn?: string): BookCandi
   c.synopsis = i.description ? stripHtml(i.description) : "";
   const thumb = i.imageLinks?.thumbnail ?? i.imageLinks?.smallThumbnail;
   c.cover = thumb ? thumb.replace(/^http:/, "https:").replace("&edge=curl", "") : "";
+  if (c.cover) c.covers = [{ url: c.cover, source: "Google Books", exact: !!preferredIsbn }];
   c.sources = ["google"];
   return c;
 }
@@ -261,7 +243,7 @@ const keyOf = (c: BookCandidate) => c.isbn13 || `${norm(c.title)}|${norm(c.autho
 export function mergeCandidates(a: BookCandidate, b: BookCandidate): BookCandidate {
   const ids = { ...a.ids };
   for (const [k, v] of Object.entries(b.ids) as [keyof BookCandidate["ids"], string | undefined][]) if (!ids[k] && v) ids[k] = v;
-  const out: BookCandidate = { ...a, ids, sources: [...new Set([...a.sources, ...b.sources])] };
+  const out: BookCandidate = { ...a, ids, sources: [...new Set([...a.sources, ...b.sources])], covers: [...a.covers, ...b.covers] };
   for (const k of ["title", "author", "cover", "isbn13", "isbn10", "publisher", "edition", "language"] as const) out[k] = a[k] || b[k];
   out.pages = a.pages || b.pages;
   out.synopsis = b.synopsis.length > a.synopsis.length ? b.synopsis : a.synopsis;
@@ -305,20 +287,21 @@ export function quickLinks(c: BookCandidate): StoreLink[] {
   return [gramedia, goodreads, amazon];
 }
 
-type GoodreadsHit = { bookId?: string | number; bookUrl?: string; title?: string; author?: { name?: string } };
+type GoodreadsHit = { bookId?: string | number; bookUrl?: string; imageUrl?: string; title?: string; author?: { name?: string } };
 
-/** Goodreads' own autocomplete (the search box on their site) returns the book page for an ISBN or title. */
-export function parseGoodreadsAutocomplete(hits: GoodreadsHit[] | null): string | null {
-  const url = hits?.find((h) => h.bookUrl)?.bookUrl;
-  if (!url) return null;
-  return new URL(url.split("?")[0], "https://www.goodreads.com").toString();
+/** Goodreads' own autocomplete (the search box on their site) returns the book page, and its cover, for an ISBN or title. */
+export function parseGoodreadsAutocomplete(hits: GoodreadsHit[] | null): { url: string; image?: string } | null {
+  const hit = hits?.find((h) => h.bookUrl);
+  if (!hit?.bookUrl) return null;
+  const image = hit.imageUrl && !/nophoto/i.test(hit.imageUrl) ? hit.imageUrl : undefined;
+  return { url: new URL(hit.bookUrl.split("?")[0], "https://www.goodreads.com").toString(), image };
 }
 
-async function resolveGoodreads(f: Fetcher, c: BookCandidate): Promise<StoreLink | null> {
+async function resolveGoodreads(f: Fetcher, c: BookCandidate): Promise<{ link: StoreLink; image?: string } | null> {
   if (c.ids.goodreads) return null; // already exact
   const q = c.isbn13 || `${c.title} ${c.author}`.trim();
-  const url = parseGoodreadsAutocomplete(await getJson<GoodreadsHit[]>(f, `https://www.goodreads.com/book/auto_complete?format=json&q=${encodeURIComponent(q)}`));
-  return url ? { label: "Goodreads", url, exact: true } : null;
+  const hit = parseGoodreadsAutocomplete(await getJson<GoodreadsHit[]>(f, `https://www.goodreads.com/book/auto_complete?format=json&q=${encodeURIComponent(q)}`));
+  return hit ? { link: { label: "Goodreads", url: hit.url, exact: true }, image: hit.image } : null;
 }
 
 /**
@@ -381,11 +364,26 @@ export async function lookupBook(query: string, opts: LookupOptions = {}): Promi
     book = (await searchBooks(query, 1, opts))[0] ?? null;
   }
   if (!book) return null;
-  if (!book.cover && book.isbn13) book.cover = `https://covers.openlibrary.org/b/isbn/${book.isbn13}-L.jpg`;
 
   const links = quickLinks(book);
   const [goodreads, gramedia] = await Promise.all([resolveGoodreads(f, book), resolveGramedia(f, book)]);
-  book.links = links.map((l) => (l.label === "Goodreads" && goodreads) || (l.label === "Gramedia" && gramedia) || l);
+  book.links = links.map((l) => (l.label === "Goodreads" && goodreads?.link) || (l.label === "Gramedia" && gramedia) || l);
+
+  const goodreadsLink = book.links.find((l) => l.label === "Goodreads" && l.exact);
+  book.covers = await findCovers(f, {
+    title: book.title,
+    author: book.author,
+    isbn13: book.isbn13,
+    isbn10: book.isbn10,
+    known: book.covers,
+    amazonId: book.ids.amazon,
+    goodreadsUrl: goodreadsLink?.url,
+    goodreadsImage: goodreads?.image,
+    gramediaUrl: gramedia?.url,
+    gramediaExact: gramedia?.exact,
+  });
+  // If no candidate passed the check (a store blocking the Worker, say), keep the catalogue's unchecked cover.
+  book.cover = book.covers[0]?.url || book.cover;
   return book;
 }
 

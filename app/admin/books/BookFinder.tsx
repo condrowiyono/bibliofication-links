@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { BookOpen, Loader2, Search } from "lucide-react";
+import type { CoverOption } from "@/lib/bookCovers";
 import type { BookInfo } from "@/lib/bookLookup";
 import type { Book } from "@/lib/site";
 import { Input } from "@/components/ui/input";
@@ -13,10 +14,16 @@ async function api<T>(params: Record<string, string>): Promise<T> {
   return data as T;
 }
 
-/** Full details for one book: by ISBN when we have one, otherwise by title and author. */
-export async function fetchBookDetails(c: { isbn13?: string; title: string; author?: string }): Promise<BookInfo | null> {
+type Details = { book: BookInfo | null; covers: CoverOption[] };
+
+/** Full details for one book, with every cover found: by ISBN when we have one, otherwise by title and author. */
+export async function fetchBookAndCovers(c: { isbn13?: string; title: string; author?: string }): Promise<Details> {
   const book = c.isbn13 || `${c.title} ${c.author ?? ""}`.trim();
-  return (await api<{ book: BookInfo | null }>({ book })).book;
+  return api<Details>({ book });
+}
+
+export async function fetchBookDetails(c: { isbn13?: string; title: string; author?: string }): Promise<BookInfo | null> {
+  return (await fetchBookAndCovers(c)).book;
 }
 
 /** Fills only what's empty, so her own edits are never overwritten. Adds store links she doesn't have yet. */

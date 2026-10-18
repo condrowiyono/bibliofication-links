@@ -19,6 +19,7 @@ import { PageHeader } from "../_components/PageHeader";
 import { SaveBar } from "../_components/SaveBar";
 import { useItemForm } from "../_components/useItemForm";
 import { BookFinder, fetchBookDetails, fillMissing } from "./BookFinder";
+import { CoverPicker } from "./CoverPicker";
 
 export const slugify = (s: string) =>
   s
@@ -92,10 +93,13 @@ export function BookForm({ book, isNew }: { book: Book; isNew: boolean }) {
       <div className="grid gap-4">
         <Card>
           <CardContent className="flex gap-4">
-            <span className="flex h-36 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-accent shadow-sm md:h-44 md:w-30">
-              {/* eslint-disable-next-line @next/next/no-img-element -- preview of a pasted URL */}
-              {b.cover ? <img src={b.cover} alt="" className="size-full object-cover" /> : <BookOpen className="size-6 text-muted-foreground" />}
-            </span>
+            <div className="grid shrink-0 content-start gap-2">
+              <span className="flex h-36 w-24 items-center justify-center overflow-hidden rounded-md border bg-accent shadow-sm md:h-44 md:w-30">
+                {/* eslint-disable-next-line @next/next/no-img-element -- preview of a pasted URL */}
+                {b.cover ? <img src={b.cover} alt="" className="size-full object-cover" /> : <BookOpen className="size-6 text-muted-foreground" />}
+              </span>
+              <CoverPicker book={b} current={b.cover} onPick={(cover) => f.set({ cover })} />
+            </div>
             <div className="grid min-w-0 flex-1 content-start gap-3">
               <FormField id="title" label="Title">
                 <Input id="title" value={b.title} onChange={(e) => setTitle(e.target.value)} />
@@ -213,14 +217,6 @@ export function BookForm({ book, isNew }: { book: Book; isNew: boolean }) {
                 <FormField id="cover" label="Cover image URL">
                   <div className="flex gap-2">
                     <Input id="cover" type="url" inputMode="url" autoCapitalize="none" placeholder="https://…" value={b.cover} onChange={(e) => f.set({ cover: e.target.value.trim() })} />
-                    <Button
-                      variant="outline"
-                      disabled={!b.isbn13}
-                      title={b.isbn13 ? undefined : "Add the ISBN-13 first"}
-                      onClick={() => f.set({ cover: `https://covers.openlibrary.org/b/isbn/${b.isbn13}-L.jpg` })}
-                    >
-                      From ISBN
-                    </Button>
                   </div>
                 </FormField>
                 <FormField id="book-id" label="Page address" hint={`bethanielle.me/books/${b.id || "…"}`}>
