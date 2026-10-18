@@ -390,3 +390,75 @@
 .book-more[open] summary {
   margin-bottom: 10px;
 }
+
+/* Book lookup */
+.book-finder {
+  margin-bottom: 12px;
+}
+
+.finder-results {
+  list-style: none;
+  margin: -4px 0 12px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.finder-results li + li {
+  border-top: 1px solid var(--line);
+}
+
+.finder-results button {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.finder-results button:hover:not(:disabled) {
+  background: var(--matcha-tint);
+}
+
+.thumb-finder {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 60px;
+  margin-top: 0;
+}
+
+.finder-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.finder-text strong {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.finder-isbn {
+  font-size: 0.8rem;
+}
+
+.fill-row {
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.fill-row .admin-note {
+  margin: 0;
+}

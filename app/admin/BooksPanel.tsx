@@ -1,7 +1,9 @@
 "use client";
 
 import { BOOK_STATUSES, STATUS_LABEL, type Book, type BookStatus } from "@/lib/site";
+import { useState } from "react";
 import { Field } from "./Field";
+import { BookFinder, candidateToBook, fetchBookDetails, fillMissing } from "./BookFinder";
 
 const slugify = (s: string) =>
   s
@@ -48,6 +50,15 @@ export function BooksPanel({ books, onChange }: { books: Book[]; onChange: (book
         The first three appear on the home shelf; all of them are in the library at /books. Rating, review and highlighted passage are yours; the
         edition details come from the book&apos;s public listing.
       </p>
+      <BookFinder
+        onPick={(c) => {
+          const found = candidateToBook(c);
+          const base = slugify(found.title);
+          let id = base;
+          for (let n = 2; books.some((b) => b.id === id); n++) id = `${base}-${n}`;
+          onChange([{ ...blankBook(), ...found, id }, ...books]);
+        }}
+      />
       {books.length === 0 && <p className="admin-note">No books yet. Add the one you&apos;re reading.</p>}
       <ol className="link-list">
         {books.map((b, i) => (
@@ -116,6 +127,8 @@ export function BooksPanel({ books, onChange }: { books: Book[]; onChange: (book
 
             <Field label="Your review (blank line between paragraphs)" value={b.review} onChange={(v) => set(i, { review: v })} multiline />
             <Field label="Highlighted passage (optional)" value={b.quote} onChange={(v) => set(i, { quote: v })} multiline />
+
+            <FillButton book={b} onFill={(patch) => set(i, patch)} />
 
             <details className="book-more">
               <summary>Edition details, cover and where to buy</summary>
@@ -194,5 +207,35 @@ export function BooksPanel({ books, onChange }: { books: Book[]; onChange: (book
         Add book
       </button>
     </section>
+  );
+}
+
+/** Looks the book up by its ISBN (or title) and fills the fields that are still empty. */
+function FillButton({ book, onFill }: { book: Book; onFill: (patch: Partial<Book>) => void }) {
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    setBusy(true);
+    setNote("");
+    try {
+      const found = await fetchBookDetails(book);
+      if (!found) return setNote("Couldn't find this book. Check the ISBN or title.");
+      const patch = fillMissing(book, found);
+      onFill(patch);
+      const n = Object.keys(patch).length;
+      setNote(n ? `Filled ${n} empty field${n === 1 ? "" : "s"}. Check them before saving.` : "Nothing new: every field already has a value.");
+    } catch (e) {
+      setNote((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="row-actions fill-row">
+      <button type="button" className="btn" onClick={run} disabled={busy || !(book.isbn13 || book.title.trim())}>
+        {busy ? "Looking it up…" : "Fill in details and store links"}
+      </button>
+      {note && <span className="admin-note">{note}</span>}
+    </div>
   );
 }
