@@ -34,11 +34,45 @@ export type ShopItem = {
 /** `stores` holds the optional "see everything" link per store; empty means no button. */
 export type Shop = { title: string; stores: Record<Store, string>; items: ShopItem[] };
 
+export const BOOK_STATUSES = ["reading", "read", "want"] as const;
+export type BookStatus = (typeof BOOK_STATUSES)[number];
+export const STATUS_LABEL: Record<BookStatus, string> = { reading: "Reading now", read: "Read", want: "Want to read" };
+
+export type BookLink = { label: string; url: string };
+
+/** One book on her shelf. Bibliographic fields come from public listings; rating, review and quote are hers. */
+export type Book = {
+  id: string;
+  title: string;
+  author: string;
+  cover: string;
+  status: BookStatus;
+  /** 1 to 5 cups of matcha; 0 means not rated yet. */
+  rating: number;
+  /** Date finished, YYYY-MM-DD, or empty. */
+  finished: string;
+  review: string;
+  quote: string;
+  synopsis: string;
+  isbn13: string;
+  isbn10: string;
+  publisher: string;
+  /** Year the work first came out. */
+  published: string;
+  /** Year of the edition the ISBN belongs to. */
+  edition: string;
+  pages: number;
+  language: string;
+  links: BookLink[];
+  visible: boolean;
+};
+
 export type Site = {
   profile: { name: string; handle: string; avatar: string; bio: string; shelf: string[] };
   socials: Social[];
   shop: Shop;
   links: LinkItem[];
+  books: Book[];
   medium: { username: string; show: boolean; count: number };
   footer: string;
 };
@@ -65,7 +99,8 @@ function upgradeShop(shop: LegacyShop | undefined): Shop {
 export async function getSite(): Promise<Site> {
   const stored = await (await kv()).get<Site>(SITE_KEY, "json");
   const site = stored ?? (seed as Site);
-  return { ...site, shop: upgradeShop(site.shop) };
+  // Data saved before the library existed starts with the seed books.
+  return { ...site, shop: upgradeShop(site.shop), books: site.books ?? (seed as Site).books };
 }
 
 export async function putSite(site: Site) {
@@ -143,6 +178,35 @@ export function validateSite(input: unknown): string[] {
     });
   }
 
+  if (!Array.isArray(s.books)) errors.push("Books must be a list.");
+  else {
+    const ids = new Set<string>();
+    s.books.forEach((b, i) => {
+      const label = `Book #${i + 1}${b?.title ? ` ("${b.title}")` : ""}`;
+      if (!isStr(b?.id) || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(b.id)) errors.push(`${label}: page address must be lowercase words joined by dashes.`);
+      else if (ids.has(b.id)) errors.push(`${label}: page address "${b.id}" is used twice.`);
+      else ids.add(b.id);
+      if (!isStr(b?.title) || !b.title.trim()) errors.push(`${label}: title is required.`);
+      if (!isStr(b?.author)) errors.push(`${label}: author must be text.`);
+      if (!BOOK_STATUSES.includes(b?.status)) errors.push(`${label}: status must be reading, read or want.`);
+      if (!Number.isInteger(b?.rating) || b.rating < 0 || b.rating > 5) errors.push(`${label}: rating must be 0 to 5.`);
+      if (b?.cover && !isUrl(b.cover) && !b.cover.startsWith("/")) errors.push(`${label}: cover must be a full https:// URL or a /path.`);
+      if (b?.finished && !/^\d{4}-\d{2}-\d{2}$/.test(b.finished)) errors.push(`${label}: finished date must look like 2026-10-18.`);
+      if (b?.isbn13 && !/^97[89]\d{10}$/.test(b.isbn13)) errors.push(`${label}: ISBN-13 must be 13 digits starting with 978 or 979.`);
+      if (b?.isbn10 && !/^\d{9}[\dX]$/.test(b.isbn10)) errors.push(`${label}: ISBN-10 must be 10 characters (digits, last may be X).`);
+      if (typeof b?.pages !== "number" || b.pages < 0) errors.push(`${label}: pages must be a number (0 if unknown).`);
+      for (const f of ["review", "quote", "synopsis", "publisher", "published", "edition", "language"] as const)
+        if (!isStr(b?.[f])) errors.push(`${label}: ${f} must be text.`);
+      if (!Array.isArray(b?.links)) errors.push(`${label}: links must be a list.`);
+      else
+        b.links.forEach((l, j) => {
+          if (!isStr(l?.label) || !l.label.trim()) errors.push(`${label}, link #${j + 1}: needs a label.`);
+          if (!isStr(l?.url) || !isUrl(l.url)) errors.push(`${label}, link #${j + 1}: URL must start with https://.`);
+        });
+      if (typeof b?.visible !== "boolean") errors.push(`${label}: visible must be true or false.`);
+    });
+  }
+
   const m = s.medium;
   if (!m || !isStr(m.username) || typeof m.show !== "boolean" || typeof m.count !== "number" || m.count < 1 || m.count > 10)
     errors.push("Medium needs a username, show (true/false) and a count from 1 to 10.");
@@ -158,4 +222,8 @@ export function publicShopItems(site: Site) {
 /** A link is shown publicly only when it is visible and, for real links, has a URL. */
 export function publicLinks(site: Site) {
   return site.links.filter((l) => l.visible && (l.type === "header" || Boolean(l.url)));
+}
+
+export function publicBooks(site: Site) {
+  return site.books.filter((b) => b.visible);
 }

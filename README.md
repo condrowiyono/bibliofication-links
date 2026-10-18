@@ -34,7 +34,7 @@ npx wrangler secret put ADMIN_PASSWORD   # pick a real password
 npm run deploy
 ```
 
-The first deploy creates the KV namespace for you. To serve it at `bethanielle.me` (or `links.bethanielle.me`), add a custom domain to the `bey-links` Worker in the Cloudflare dashboard, or add a `routes` entry to `wrangler.jsonc`.
+The first deploy creates the KV namespace for you. To serve it at `bethanielle.me` (or `links.bethanielle.me`), add a custom domain to the `bibliofication-links` Worker in the Cloudflare dashboard, or add a `routes` entry to `wrangler.jsonc`.
 
 ## Installable app (PWA)
 
