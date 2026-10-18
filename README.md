@@ -3,6 +3,7 @@
 A link-in-bio page for Bey (@bibliofication), in the spirit of Linktree and lynk.id, with a small editor to manage it. Next.js on Cloudflare Workers.
 
 - `/`: the page. Bookplate header, her "shelf" of loves as book spines, her Shopee picks, links grouped into sections, and her latest Medium essays.
+- `/books` and `/books/<id>`: her library and one page per book with her review.
 - `/admin`: the editor, behind a password. Edit with a form, or edit the raw JSON directly.
 
 ## The data is one JSON document
@@ -13,6 +14,7 @@ Rules the editor enforces:
 
 - A link with an empty `url` is hidden from the page and flagged "Hidden: needs a URL" in the editor.
 - `shop.items` is the list of affiliate products: `store` (`"shopee"` or `"tiktok"` for TikTok Shop), `title`, `url` (the affiliate link), optional `image` (photo URL) and `price` (text, e.g. `Rp 89.000`), and `visible`. Products show as a two-column photo grid labelled with their store; one without a link stays hidden. `shop.stores.shopee` / `shop.stores.tiktok` (optional) each add a green "See everything on ..." button under the grid. With no products and no store links, the section doesn't appear.
+- `books` is her library: `status` (`reading`, `read`, `want`), `rating` (cups of matcha, 0 to 5, 0 = not rated), `review` (blank line between paragraphs), `quote`, `finished` (YYYY-MM-DD), plus edition details from the public listing (`isbn13`, `isbn10`, `publisher`, `published`, `edition`, `pages`, `language`, `synopsis`) and `links` (where to buy). `id` is the page address, `/books/<id>`. The first three show on the home shelf; all are at `/books`. Covers for the starting books are in `public/covers/`; "Cover from ISBN" in the editor uses Open Library.
 - `icon` is one of `instagram`, `tiktok`, `threads`, `x`, `medium`, `shopee`, `goodreads`, `spotify`, or `""` to show the title's first letter.
 - `featured: true` makes the green card. `type: "header"` makes a section heading.
 

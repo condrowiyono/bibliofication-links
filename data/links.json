@@ -163,63 +163,98 @@
       "id": "ronggeng-dukuh-paruk",
       "title": "Ronggeng Dukuh Paruk",
       "author": "Ahmad Tohari",
-      "cover": "",
+      "cover": "/covers/ronggeng-dukuh-paruk.jpg",
       "status": "read",
       "rating": 0,
       "finished": "",
       "review": "",
       "quote": "",
-      "synopsis": "",
-      "isbn13": "",
-      "isbn10": "",
-      "publisher": "",
-      "published": "",
-      "edition": "",
-      "pages": 0,
-      "language": "",
-      "links": [],
+      "synopsis": "In Dukuh Paruk, a poor and isolated hamlet in Central Java, young Srintil becomes the village's new ronggeng dancer, and the novel follows her and the community through the political upheaval of 1965.",
+      "isbn13": "9789792277289",
+      "isbn10": "9792277285",
+      "publisher": "Gramedia Pustaka Utama",
+      "published": "1982",
+      "edition": "2011",
+      "pages": 406,
+      "language": "Indonesian",
+      "links": [
+        {
+          "label": "Gramedia",
+          "url": "https://www.gramedia.com/products/ronggeng-dukuh-paruk-2"
+        },
+        {
+          "label": "Goodreads",
+          "url": "https://www.goodreads.com/book/show/1334844.Ronggeng_Dukuh_Paruk"
+        },
+        {
+          "label": "Amazon (Indonesian audiobook)",
+          "url": "https://www.amazon.com/dp/B0FM1V447X"
+        }
+      ],
       "visible": true
     },
     {
       "id": "rahasia-salinem",
       "title": "Rahasia Salinem",
-      "author": "Brilliant Yotenega & Wisnu Suryaning Adji",
-      "cover": "",
+      "author": "Wisnu Suryaning Adji & Brilliant Yotenega",
+      "cover": "/covers/rahasia-salinem.jpg",
       "status": "read",
       "rating": 0,
       "finished": "",
       "review": "",
       "quote": "",
-      "synopsis": "",
-      "isbn13": "",
-      "isbn10": "",
-      "publisher": "",
-      "published": "",
-      "edition": "",
-      "pages": 0,
-      "language": "",
-      "links": [],
+      "synopsis": "After the death of Mbah Nem, Tyo searches for her lost pecel spice recipe and uncovers the hidden life of Salinem, a servant to a noble family in Surakarta, through colonial occupation, war and revolution.",
+      "isbn13": "9786231863546",
+      "isbn10": "6231863549",
+      "publisher": "Bentang Pustaka",
+      "published": "2018",
+      "edition": "2024",
+      "pages": 424,
+      "language": "Indonesian",
+      "links": [
+        {
+          "label": "Gramedia",
+          "url": "https://www.gramedia.com/products/rahasia-salinem-1"
+        },
+        {
+          "label": "Bentang Pustaka",
+          "url": "https://bentangpustaka.com/buku/rahasia-salinem/"
+        },
+        {
+          "label": "Goodreads",
+          "url": "https://www.goodreads.com/book/show/212114016-rahasia-salinem"
+        }
+      ],
       "visible": true
     },
     {
       "id": "harry-potter-and-the-philosophers-stone",
       "title": "Harry Potter and the Philosopher's Stone",
       "author": "J.K. Rowling",
-      "cover": "",
+      "cover": "/covers/harry-potter-and-the-philosophers-stone.jpg",
       "status": "read",
       "rating": 0,
       "finished": "",
       "review": "",
       "quote": "",
-      "synopsis": "",
-      "isbn13": "",
-      "isbn10": "",
-      "publisher": "",
-      "published": "",
-      "edition": "",
-      "pages": 0,
-      "language": "",
-      "links": [],
+      "synopsis": "Raised by his unkind aunt and uncle, Harry Potter learns on his eleventh birthday that he is a wizard and begins his first year at Hogwarts School of Witchcraft and Wizardry.",
+      "isbn13": "9781408855652",
+      "isbn10": "1408855658",
+      "publisher": "Bloomsbury",
+      "published": "1997",
+      "edition": "2014",
+      "pages": 342,
+      "language": "English",
+      "links": [
+        {
+          "label": "Amazon",
+          "url": "https://www.amazon.com/dp/1408855658"
+        },
+        {
+          "label": "Goodreads",
+          "url": "https://www.goodreads.com/book/show/22841994-harry-potter-and-the-philosopher-s-stone"
+        }
+      ],
       "visible": true
     }
   ],

@@ -1,6 +1,7 @@
 // Offline support: the links page is network-first (edits from /admin show up right away) with the last copy
-// kept for offline visits; build assets and icons are cache-first since their URLs change when their content does.
-const VERSION = "v2";
+// kept for offline visits; build assets, icons and book covers are cache-first (build URLs change with their content;
+// if a file in /icons or /covers is replaced under the same name, bump VERSION).
+const VERSION = "v3";
 const PAGES = `pages-${VERSION}`;
 const ASSETS = `assets-${VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -46,7 +47,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/")) {
+  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || url.pathname.startsWith("/covers/")) {
     event.respondWith(
       caches.match(request).then(
         (hit) =>

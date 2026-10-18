@@ -3,9 +3,11 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { BrandIcon, platformName } from "@/components/BrandIcon";
 import { Avatar, ProductImage, ShareButton, ThemeToggle } from "@/components/PageControls";
+import Link from "next/link";
+import { BookShelf } from "@/components/BookShelf";
 import { TeaCup } from "@/components/TeaCup";
 import { getEssays } from "@/lib/medium";
-import { getSite, publicLinks, publicShopItems, STORE_NAMES, STORES, type LinkItem, type Site } from "@/lib/site";
+import { getSite, publicBooks, publicLinks, publicShopItems, STORE_NAMES, STORES, type LinkItem, type Site } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
@@ -65,6 +67,8 @@ export default async function Home() {
       )}
 
       <main className="links">
+        <ShelfSection books={publicBooks(site)} name={profile.name} />
+
         <ShopSection shop={site.shop} items={publicShopItems(site)} />
 
         {links.length === 0 ? (
@@ -92,6 +96,28 @@ export default async function Home() {
 
 /** Drinks sit on the shelf as a cup instead of a book. */
 const isDrink = (word: string) => /matcha|tea|teh|coffee|kopi|latte/i.test(word);
+
+/** Her latest books under the fairy lights, then the way into the full library. */
+function ShelfSection({ books, name }: { books: Site["books"]; name: string }) {
+  if (books.length === 0) return null;
+  return (
+    <section aria-labelledby="onshelf-title">
+      <h2 id="onshelf-title" className="chapter">
+        On my shelf
+      </h2>
+      <BookShelf books={books.slice(0, 3).map(({ id, title, author, cover, status }) => ({ id, title, author, cover, status }))} />
+      <Link href="/books" className="card card-library">
+        <span className="card-mark" aria-hidden="true">
+          <span className="card-letter">B</span>
+        </span>
+        <span className="card-text">
+          <span className="card-title">{name}&apos;s library</span>
+          <span className="card-sub">Every book I&apos;ve read, with my reviews</span>
+        </span>
+      </Link>
+    </section>
+  );
+}
 
 function ShopSection({ shop, items }: { shop: Site["shop"]; items: Site["shop"]["items"] }) {
   const storeLinks = STORES.filter((st) => shop.stores[st]);

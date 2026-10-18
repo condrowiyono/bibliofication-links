@@ -3,6 +3,8 @@
 import { useEffect, useState, useTransition } from "react";
 import { PLATFORMS, STORE_NAMES, STORES, type LinkItem, type Platform, type ShopItem, type Site, type Store } from "@/lib/site";
 import { logoutAction, saveSiteAction } from "./actions";
+import { BooksPanel } from "./BooksPanel";
+import { Field } from "./Field";
 
 type Status = { kind: "idle" } | { kind: "saved"; at: string } | { kind: "error"; errors: string[] };
 
@@ -358,6 +360,8 @@ export function Editor({ initial }: { initial: Site }) {
             </div>
           </section>
 
+          <BooksPanel books={site.books} onChange={(books) => setSite((s) => ({ ...s, books }))} />
+
           <section className="panel" aria-labelledby="h-medium">
             <h2 id="h-medium">Latest essays from Medium</h2>
             <div className="row">
@@ -430,30 +434,5 @@ function ShelfField({ shelf, onChange }: { shelf: string[]; onChange: (shelf: st
         onChange(v.split(",").map((w) => w.trim()).filter(Boolean));
       }}
     />
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
-  multiline,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  multiline?: boolean;
-}) {
-  return (
-    <label className="field">
-      <span>{label}</span>
-      {multiline ? (
-        <textarea rows={3} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
-      ) : (
-        <input type="text" value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
-      )}
-    </label>
   );
 }

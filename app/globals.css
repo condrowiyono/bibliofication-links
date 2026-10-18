@@ -13,6 +13,7 @@
   --on-matcha: #fbf8f0;
   --wax: #8c2b24;
   --on-wax: #fbf8f0;
+  --glow: #e7b94c;
   color-scheme: light;
 }
 
@@ -28,6 +29,7 @@
     --on-matcha: #1b1a17;
     --wax: #e0796c;
     --on-wax: #1b1a17;
+    --glow: #f4cf6e;
     color-scheme: dark;
   }
 }
@@ -43,6 +45,7 @@
   --on-matcha: #1b1a17;
   --wax: #e0796c;
   --on-wax: #1b1a17;
+  --glow: #f4cf6e;
   color-scheme: dark;
 }
 

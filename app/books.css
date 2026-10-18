@@ -1,0 +1,695 @@
+/*
+  The library. Same paper, ink and matcha as the rest of the page; the one new tone is --glow, the warm light
+  of the fairy-light bulbs strung over each shelf (borrowed from Mistbook's lit shelves).
+*/
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.library-head {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+/* Shelves */
+.bshelf {
+  margin: 4px 0 8px;
+}
+
+.bshelf-row {
+  position: relative;
+  padding-top: 34px;
+}
+
+.garland {
+  position: absolute;
+  top: 0;
+  left: 4px;
+  right: 4px;
+  height: 30px;
+  pointer-events: none;
+}
+
+.garland-wire {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 24px;
+  overflow: visible;
+}
+
+.garland-wire path {
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.bulb {
+  position: absolute;
+  width: 8px;
+  height: 10px;
+  margin-left: -4px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: var(--card);
+  border: 1px solid var(--ink-soft);
+}
+
+/* Lit bulbs: the glow is the light itself, so it is the only glow on the page */
+.bshelf[data-anim="run"] .bulb {
+  animation:
+    bulb-on 260ms ease-out calc(var(--b) * 70ms) both,
+    twinkle 3.4s ease-in-out calc(var(--b) * 70ms + 1s + var(--tw)) infinite;
+}
+
+@keyframes bulb-on {
+  to {
+    background: var(--glow);
+    border-color: var(--glow);
+    box-shadow: 0 0 8px 1px var(--glow);
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    background: var(--glow);
+    border-color: var(--glow);
+    box-shadow: 0 0 8px 1px var(--glow);
+  }
+  50% {
+    background: var(--glow);
+    border-color: var(--glow);
+    box-shadow: 0 0 2px 0 var(--glow);
+    opacity: 0.6;
+  }
+}
+
+.bshelf-books {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  min-height: 60px;
+  margin: 0;
+  padding: 0 14px;
+  list-style: none;
+}
+
+.bbook-slot {
+  flex: 0 1 30%;
+  max-width: 132px;
+}
+
+.bshelf[data-anim="pending"] .bbook-slot {
+  opacity: 0;
+  transform: translateY(-26px) rotate(-5deg);
+}
+
+/* Books drop onto the shelf one after another and settle with a small bounce */
+.bshelf[data-anim="run"] .bbook-slot {
+  animation: book-drop 640ms cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--i) * 110ms + 280ms) both;
+}
+
+@keyframes book-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-26px) rotate(-5deg);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.bbook {
+  position: relative;
+  display: block;
+  text-decoration: none;
+  aspect-ratio: 2 / 3;
+  border-radius: 2px 5px 5px 2px;
+  box-shadow: 2px 3px 0 var(--line);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+/* Spine crease on the left edge and page edges peeking out on the right */
+.bbook::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 7px;
+  border-radius: 2px 0 0 2px;
+  background: linear-gradient(90deg, rgb(0 0 0 / 0.28), rgb(255 255 255 / 0.12) 60%, transparent);
+  z-index: 1;
+}
+
+.bbook::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  right: -4px;
+  width: 4px;
+  border-radius: 0 2px 2px 0;
+  background: repeating-linear-gradient(to bottom, var(--card) 0 2px, var(--ink-soft) 2px 2.6px);
+  border: 1px solid var(--line);
+  border-left: 0;
+}
+
+/* Taking a book off the shelf: it lifts and tilts toward you */
+.bbook:hover,
+.bbook:focus-visible {
+  transform: translateY(-10px) rotate(-3deg);
+  box-shadow: 4px 8px 0 var(--line);
+}
+
+/* Currently reading: a ribbon bookmark sticks out of the top */
+.bbook-slot:has(.bbook[data-status="reading"]) {
+  position: relative;
+}
+
+.bbook-slot:has(.bbook[data-status="reading"])::after {
+  content: "";
+  position: absolute;
+  top: -12px;
+  right: 18%;
+  width: 9px;
+  height: 22px;
+  background: var(--wax);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+  transform: rotate(180deg);
+  pointer-events: none;
+}
+
+.cover-img,
+.cover-plain {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.cover-img {
+  object-fit: cover;
+  border: 1px solid var(--line);
+  background: var(--matcha-tint);
+}
+
+/* A cloth rebind for books without a cover image */
+.cover-plain {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14% 10% 10% 16%;
+  border: 1px solid var(--line);
+  text-align: center;
+  font-family: var(--font-fell), Georgia, serif;
+}
+
+.cover-tone-0 { background: var(--matcha); color: var(--on-matcha); }
+.cover-tone-1 { background: var(--wax); color: var(--on-wax); }
+.cover-tone-2 { background: var(--ink); color: var(--paper); }
+
+.cover-plain-title {
+  font-size: clamp(0.7rem, 3.2vw, 0.95rem);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  border-top: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  padding: 6px 0;
+}
+
+.cover-plain-author {
+  font-style: italic;
+  font-size: clamp(0.6rem, 2.6vw, 0.8rem);
+  line-height: 1.2;
+}
+
+.bshelf-cup {
+  position: absolute;
+  right: -12px;
+  bottom: 6px;
+  z-index: 2;
+}
+
+.bshelf-cup .cup,
+.bshelf-cup .cup svg {
+  width: 62px;
+  height: 54px;
+}
+
+.bshelf[data-anim="pending"] .bshelf-cup {
+  opacity: 0;
+}
+
+.bshelf[data-anim="run"] .bshelf-cup {
+  animation: cup-set 500ms ease-out 900ms both;
+}
+
+@keyframes cup-set {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.bshelf-plank {
+  height: 8px;
+  background: var(--line);
+  border-radius: 2px;
+}
+
+.bshelf-row + .bshelf-row {
+  margin-top: 6px;
+}
+
+.bshelf-empty {
+  margin: 12px 0 0;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.card-library {
+  margin-top: 18px;
+}
+
+/* Library filters */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 12px 0 8px;
+}
+
+.filter {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.filter[aria-pressed="true"] {
+  background: var(--matcha);
+  border-color: var(--matcha);
+  color: var(--on-matcha);
+}
+
+.filter-count {
+  margin-left: 2px;
+  opacity: 0.8;
+}
+
+/* Review list on the library page */
+.review-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review-card {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  text-decoration: none;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.review-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 3px 3px 0 var(--line);
+}
+
+.review-thumb {
+  display: block;
+  aspect-ratio: 2 / 3;
+  border-radius: 2px 4px 4px 2px;
+}
+
+.review-thumb .cover-plain {
+  padding: 10% 8%;
+}
+
+.review-thumb .cover-plain-title {
+  font-size: 0.55rem;
+  padding: 3px 0;
+}
+
+.review-thumb .cover-plain-author {
+  display: none;
+}
+
+.review-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.review-status {
+  margin: 0;
+  font-family: var(--font-fell), Georgia, serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.review-excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 4px;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+/* Matcha-cup rating */
+.cups {
+  display: inline-flex;
+  gap: 3px;
+  margin: 4px 0;
+}
+
+.cups .mini-body {
+  fill: var(--card);
+  stroke: var(--line);
+  stroke-width: 1.4;
+}
+
+.cups .mini-handle {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.cups .mini-tea {
+  fill: var(--card);
+  stroke: var(--line);
+  stroke-width: 1.4;
+}
+
+.cups .cup-full .mini-tea {
+  fill: var(--matcha);
+}
+
+.cups .cup-empty {
+  opacity: 0.45;
+}
+
+/* Book page: a 3D book that turns toward you as the page opens */
+.book-stage {
+  display: grid;
+  place-items: center;
+  padding: 16px 0 28px;
+  perspective: 1100px;
+}
+
+.book3d {
+  position: relative;
+  width: min(52vw, 190px);
+  aspect-ratio: 2 / 3;
+  transform-style: preserve-3d;
+  transform: rotateY(-24deg) rotateX(4deg);
+  animation: book-turn 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: transform 400ms ease;
+}
+
+.book3d:hover {
+  transform: rotateY(-8deg) rotateX(2deg);
+}
+
+@keyframes book-turn {
+  from {
+    transform: translateY(24px) rotateY(-70deg) rotateX(8deg);
+  }
+  to {
+    transform: rotateY(-24deg) rotateX(4deg);
+  }
+}
+
+.book3d-fade {
+  perspective: 1100px;
+  animation: book-fade 500ms ease-out both;
+}
+
+@keyframes book-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.book3d-cover {
+  position: absolute;
+  inset: 0;
+  border-radius: 2px 6px 6px 2px;
+  overflow: hidden;
+  transform: translateZ(14px);
+  box-shadow: inset 6px 0 8px -4px rgb(0 0 0 / 0.35);
+}
+
+.book3d-cover .cover-img,
+.book3d-cover .cover-plain {
+  border-radius: inherit;
+}
+
+.book3d-cover .cover-plain-title {
+  font-size: 1.15rem;
+}
+
+.book3d-cover .cover-plain-author {
+  font-size: 0.9rem;
+}
+
+/* Page block seen from the right side */
+.book3d-pages {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  right: 0;
+  width: 28px;
+  transform: translateX(14px) rotateY(90deg);
+  background: repeating-linear-gradient(to right, var(--card) 0 2px, var(--paper) 2px 3px, var(--ink-soft) 3px 3.4px);
+  border: 1px solid var(--line);
+}
+
+.book3d-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 2px 6px 6px 2px;
+  background: var(--ink);
+  transform: translateZ(-14px);
+  box-shadow: 14px 18px 0 -4px var(--matcha-tint);
+}
+
+.book-head {
+  text-align: center;
+}
+
+.book-title {
+  margin: 4px 0 0;
+  font-family: var(--font-fell), Georgia, serif;
+  font-weight: 400;
+  font-size: 2.1rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.book-author {
+  margin: 4px 0 6px;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+/* Favourite passage, marked the way a Kindle highlight looks */
+.highlight {
+  margin: 28px 0 0;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+}
+
+.highlight figcaption {
+  font-family: var(--font-fell), Georgia, serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.highlight blockquote {
+  margin: 8px 0 0;
+}
+
+.highlight p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.highlight mark {
+  background: var(--matcha-tint);
+  color: var(--ink);
+  padding: 2px 0;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.review-body p {
+  margin: 0 0 1em;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.review-body p + p {
+  clear: both;
+}
+
+.review-body p:first-child::first-letter {
+  float: left;
+  margin: 6px 8px 0 0;
+  font-family: var(--font-fell), Georgia, serif;
+  font-size: 3.2rem;
+  line-height: 0.8;
+  color: var(--matcha);
+}
+
+.synopsis {
+  margin: 0;
+  line-height: 1.7;
+}
+
+.book-details {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+}
+
+.book-details > div {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 12px;
+  padding: 10px 14px;
+}
+
+.book-details > div + div {
+  border-top: 1px dotted var(--ink-soft);
+}
+
+.book-details dt {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.book-details dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.copy-btn {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.book-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 32px;
+}
+
+.book-nav .card {
+  grid-template-columns: 1fr;
+  margin-top: 0;
+}
+
+.book-nav-next {
+  text-align: right;
+}
+
+@media (max-width: 380px) {
+  .book-details > div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .bshelf-books {
+    gap: 10px;
+    padding: 0 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bshelf[data-anim] .bbook-slot,
+  .bshelf[data-anim] .bshelf-cup {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .bshelf[data-anim] .bulb {
+    animation: none;
+    background: var(--glow);
+    border-color: var(--glow);
+    box-shadow: 0 0 6px 1px var(--glow);
+  }
+  .book3d,
+  .book3d-fade {
+    animation: none;
+    transition: none;
+  }
+  .bbook,
+  .review-card {
+    transition: none;
+  }
+  .bbook:hover,
+  .bbook:focus-visible,
+  .review-card:hover {
+    transform: none;
+  }
+}

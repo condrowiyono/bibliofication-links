@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IM_Fell_English, Literata } from "next/font/google";
 import { RegisterServiceWorker } from "@/components/RegisterServiceWorker";
 import "./globals.css";
+import "./books.css";
 
 // IM Fell is a 17th-century press type: the old-book, Hogwarts-letter voice for names and headings.
 const fell = IM_Fell_English({ weight: "400", style: ["normal", "italic"], subsets: ["latin"], variable: "--font-fell" });
@@ -30,6 +31,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${fell.variable} ${literata.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* Without JavaScript the shelf animation never starts, so show the books and lights as they end up. */}
+        <noscript>
+          <style>{`.bshelf .bbook-slot,.bshelf .bshelf-cup{opacity:1!important;transform:none!important}.bshelf .bulb{background:var(--glow);border-color:var(--glow)}`}</style>
+        </noscript>
       </head>
       <body>
         {children}
