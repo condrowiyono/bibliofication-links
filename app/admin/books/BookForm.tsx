@@ -19,6 +19,7 @@ import { PageHeader } from "../_components/PageHeader";
 import { SaveBar } from "../_components/SaveBar";
 import { useItemForm } from "../_components/useItemForm";
 import { BookFinder, fetchBookDetails, fillMissing } from "./BookFinder";
+import { CoverPicker } from "./CoverPicker";
 
 export const slugify = (s: string) =>
   s
@@ -92,10 +93,13 @@ export function BookForm({ book, isNew }: { book: Book; isNew: boolean }) {
       <div className="grid gap-4">
         <Card>
           <CardContent className="flex gap-4">
-            <span className="flex h-36 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-accent shadow-sm md:h-44 md:w-30">
-              {/* eslint-disable-next-line @next/next/no-img-element -- preview of a pasted URL */}
-              {b.cover ? <img src={b.cover} alt="" className="size-full object-cover" /> : <BookOpen className="size-6 text-muted-foreground" />}
-            </span>
+            <div className="grid shrink-0 content-start gap-2">
+              <span className="flex h-36 w-24 items-center justify-center overflow-hidden rounded-md border bg-accent shadow-sm md:h-44 md:w-30">
+                {/* eslint-disable-next-line @next/next/no-img-element -- preview of a pasted URL */}
+                {b.cover ? <img src={b.cover} alt="" className="size-full object-cover" /> : <BookOpen className="size-6 text-muted-foreground" />}
+              </span>
+              <CoverPicker book={b} current={b.cover} onPick={(cover) => f.set({ cover })} />
+            </div>
             <div className="grid min-w-0 flex-1 content-start gap-3">
               <FormField id="title" label="Title">
                 <Input id="title" value={b.title} onChange={(e) => setTitle(e.target.value)} />
@@ -213,14 +217,6 @@ export function BookForm({ book, isNew }: { book: Book; isNew: boolean }) {
                 <FormField id="cover" label="Cover image URL">
                   <div className="flex gap-2">
                     <Input id="cover" type="url" inputMode="url" autoCapitalize="none" placeholder="https://…" value={b.cover} onChange={(e) => f.set({ cover: e.target.value.trim() })} />
-                    <Button
-                      variant="outline"
-                      disabled={!b.isbn13}
-                      title={b.isbn13 ? undefined : "Add the ISBN-13 first"}
-                      onClick={() => f.set({ cover: `https://covers.openlibrary.org/b/isbn/${b.isbn13}-L.jpg` })}
-                    >
-                      From ISBN
-                    </Button>
                   </div>
                 </FormField>
                 <FormField id="book-id" label="Page address" hint={`bethanielle.me/books/${b.id || "…"}`}>
@@ -244,28 +240,43 @@ export function BookForm({ book, isNew }: { book: Book; isNew: boolean }) {
           </Card>
         </Collapsible>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Where to find it</CardTitle>
-            <CardDescription>Gramedia, Goodreads, Amazon… Links labelled “(search)” open a search on that store.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {links.map((l, j) => (
-              <div key={j} className="grid gap-2 rounded-lg border p-3">
-                <div className="flex items-center gap-2">
-                  <Input aria-label="Label" placeholder="Store" value={l.label} onChange={(e) => setLink(j, { label: e.target.value })} />
-                  <Button variant="ghost" size="icon" aria-label={`Remove ${l.label || "link"}`} onClick={() => f.set({ links: links.filter((_, k) => k !== j) })}>
-                    <X />
+        <Collapsible defaultOpen={isNew || links.length === 0}>
+          <Card className="gap-0">
+            <CardHeader>
+              <CardTitle>Where to find it</CardTitle>
+              <CardDescription>
+                {links.length
+                  ? links.map((l) => l.label || "Untitled").join(" · ")
+                  : "Gramedia, Goodreads, Amazon… Links labelled “(search)” open a search on that store."}
+              </CardDescription>
+              <CardAction>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="icon-sm" aria-label="Show or hide store links" className="group">
+                    <ChevronDown className="transition-transform group-data-[state=open]:rotate-180" />
                   </Button>
-                </div>
-                <Input aria-label="URL" type="url" inputMode="url" autoCapitalize="none" placeholder="https://…" value={l.url} onChange={(e) => setLink(j, { url: e.target.value.trim() })} />
-              </div>
-            ))}
-            <Button variant="outline" onClick={() => f.set({ links: [...links, { label: "", url: "" }] })}>
-              <Plus /> Add store link
-            </Button>
-          </CardContent>
-        </Card>
+                </CollapsibleTrigger>
+              </CardAction>
+            </CardHeader>
+            <CollapsibleContent>
+              <CardContent className="grid gap-3 pt-5">
+                {links.map((l, j) => (
+                  <div key={j} className="grid gap-2 rounded-lg border p-3">
+                    <div className="flex items-center gap-2">
+                      <Input aria-label="Label" placeholder="Store" value={l.label} onChange={(e) => setLink(j, { label: e.target.value })} />
+                      <Button variant="ghost" size="icon" aria-label={`Remove ${l.label || "link"}`} onClick={() => f.set({ links: links.filter((_, k) => k !== j) })}>
+                        <X />
+                      </Button>
+                    </div>
+                    <Input aria-label="URL" type="url" inputMode="url" autoCapitalize="none" placeholder="https://…" value={l.url} onChange={(e) => setLink(j, { url: e.target.value.trim() })} />
+                  </div>
+                ))}
+                <Button variant="outline" onClick={() => f.set({ links: [...links, { label: "", url: "" }] })}>
+                  <Plus /> Add store link
+                </Button>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         <Card>
           <CardContent>
