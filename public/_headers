@@ -1,0 +1,4 @@
+# Cloudflare static asset headers. The service worker must never be served stale, or updates to it would stall.
+/sw.js
+  Cache-Control: no-cache
+  Content-Type: application/javascript; charset=utf-8

@@ -35,3 +35,7 @@ npm run deploy
 ```
 
 The first deploy creates the KV namespace for you. To serve it at `bethanielle.me` (or `links.bethanielle.me`), add a custom domain to the `bey-links` Worker in the Cloudflare dashboard, or add a `routes` entry to `wrangler.jsonc`.
+
+## Installable app (PWA)
+
+The page installs to a phone's home screen (Add to Home Screen on iOS, Install app on Android/Chrome) with her photo as the icon. `app/manifest.ts` holds the name and colors; the icons in `app/` and `public/icons/` were cut from her Medium photo. `public/sw.js` keeps the last-seen page for offline visits and shows `/offline` otherwise; `/admin` always needs a connection. If you change the caching logic in `sw.js`, bump `VERSION` at its top so phones drop the old caches.

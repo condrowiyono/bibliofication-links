@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IM_Fell_English, Literata } from "next/font/google";
+import { RegisterServiceWorker } from "@/components/RegisterServiceWorker";
 import "./globals.css";
 
 // IM Fell is a 17th-century press type: the old-book, Hogwarts-letter voice for names and headings.
@@ -10,6 +11,8 @@ const literata = Literata({ subsets: ["latin"], variable: "--font-literata" });
 export const metadata: Metadata = {
   title: "Bey",
   description: "Books, Kindle, Harry Potter, K-pop and matcha. All of Bey's links in one place.",
+  applicationName: "Bey",
+  appleWebApp: { capable: true, title: "Bey", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
@@ -28,7 +31,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <RegisterServiceWorker />
+      </body>
     </html>
   );
 }
