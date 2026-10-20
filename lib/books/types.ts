@@ -40,6 +40,8 @@ export type LookupOptions = {
   fetch?: typeof fetch;
   /** ISBNdb is only asked when there's a key (it's a paid API). */
   isbndbKey?: string;
+  /** ISBNdb's address depends on the plan: api2.isbndb.com (Basic), api.premium.isbndb.com, api.pro.isbndb.com. */
+  isbndbHost?: string;
   /** Optional: Google Books works without a key, but the keyless quota is shared and often used up. */
   googleApiKey?: string;
 };

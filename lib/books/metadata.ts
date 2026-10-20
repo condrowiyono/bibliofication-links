@@ -101,7 +101,7 @@ export async function lookupIsbn(input: string, opts: LookupOptions = {}): Promi
 
   // 1. ISBNdb, with the store pages and the first-published year alongside.
   const [isbndbRaw, gram, gr, firstYear] = await Promise.all([
-    isbndbByIsbn(f, isbn13, opts.isbndbKey),
+    isbndbByIsbn(f, isbn13, opts.isbndbKey, opts.isbndbHost),
     gramedia(f, isbn13),
     goodreads(f, isbn13),
     openLibraryFirstPublished(f, isbn13),

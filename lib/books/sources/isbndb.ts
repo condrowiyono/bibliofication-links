@@ -42,15 +42,16 @@ export function fromIsbndb(b: IsbndbBook): SourceRecord {
 }
 
 const headers = (key: string) => ({ Authorization: key });
+const base = (host?: string) => `https://${host || "api2.isbndb.com"}`;
 
-export async function isbndbByIsbn(f: Fetcher, isbn: string, key?: string): Promise<SourceRecord | null> {
+export async function isbndbByIsbn(f: Fetcher, isbn: string, key?: string, host?: string): Promise<SourceRecord | null> {
   if (!key) return null;
-  const data = await getJson<{ book?: IsbndbBook }>(f, `https://api2.isbndb.com/book/${isbn}`, headers(key));
+  const data = await getJson<{ book?: IsbndbBook }>(f, `${base(host)}/book/${isbn}`, headers(key));
   return data?.book ? fromIsbndb(data.book) : null;
 }
 
-export async function isbndbSearch(f: Fetcher, q: string, limit: number, key?: string): Promise<SourceRecord[]> {
+export async function isbndbSearch(f: Fetcher, q: string, limit: number, key?: string, host?: string): Promise<SourceRecord[]> {
   if (!key) return [];
-  const data = await getJson<{ books?: IsbndbBook[] }>(f, `https://api2.isbndb.com/books/${encodeURIComponent(q)}?page=1&pageSize=${limit}`, headers(key));
+  const data = await getJson<{ books?: IsbndbBook[] }>(f, `${base(host)}/books/${encodeURIComponent(q)}?page=1&pageSize=${limit}`, headers(key));
   return (data?.books ?? []).map(fromIsbndb);
 }

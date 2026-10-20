@@ -14,12 +14,36 @@ import { parseIsbn, toIsbn13 } from "@/lib/isbn";
  *   ?q=<title or ISBN>                suggestions while typing → { results }
  *
  * `book` is shaped like a book in data/links.json. Results are cached in KV for a week; empty ones for an hour.
- * ISBNdb is used only when ISBNDB_API_KEY is set (npx wrangler secret put ISBNDB_API_KEY).
+ * ISBNdb is used only when ISBNDB_API_KEY is set (npx wrangler secret put ISBNDB_API_KEY); set ISBNDB_API_HOST
+ * for a Premium or Pro plan (api.premium.isbndb.com, api.pro.isbndb.com).
+ *
+ * Add &debug=1 to skip the cache and see every outside request: address (keys hidden), status, time,
+ * and the start of any error. That's how to tell which source is failing and why.
  */
 const WEEK = 60 * 60 * 24 * 7;
 const HOUR = 60 * 60;
 
-type Env = { ISBNDB_API_KEY?: string; GOOGLE_BOOKS_API_KEY?: string };
+type Env = { ISBNDB_API_KEY?: string; ISBNDB_API_HOST?: string; GOOGLE_BOOKS_API_KEY?: string };
+
+type Call = { url: string; status: number | "error"; ms: number; detail?: string };
+
+/** A fetch that records each request, for ?debug=1. Keys in the URL are hidden; headers are never recorded. */
+function tracingFetch(calls: Call[]): typeof fetch {
+  return (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input instanceof Request ? input.url : input).replace(/([?&]key=)[^&]+/, "$1…");
+    const start = Date.now();
+    try {
+      const res = await fetch(input, init);
+      const call: Call = { url, status: res.status, ms: Date.now() - start };
+      if (!res.ok) call.detail = (await res.clone().text().catch(() => "")).slice(0, 300);
+      calls.push(call);
+      return res;
+    } catch (err) {
+      calls.push({ url, status: "error", ms: Date.now() - start, detail: String((err as Error)?.message ?? err).slice(0, 300) });
+      throw err;
+    }
+  }) as typeof fetch;
+}
 
 export async function GET(request: Request) {
   if (!(await isAdmin())) return Response.json({ error: "Log in to the editor first." }, { status: 401 });
@@ -34,16 +58,20 @@ export async function GET(request: Request) {
 
   const { env } = await getCloudflareContext({ async: true });
   const e = env as Env;
+  const debug = params.get("debug") === "1";
+  const calls: Call[] = [];
   const opts = {
     isbndbKey: e.ISBNDB_API_KEY || process.env.ISBNDB_API_KEY,
+    isbndbHost: e.ISBNDB_API_HOST || process.env.ISBNDB_API_HOST,
     googleApiKey: e.GOOGLE_BOOKS_API_KEY || process.env.GOOGLE_BOOKS_API_KEY,
+    ...(debug ? { fetch: tracingFetch(calls) } : {}),
   };
 
   const author = get("author") ?? "";
   const title = get("title") ?? "";
   const [mode, key] = isbn ? ["isbn", isbn] : covers ? ["covers", `${covers}|${title}|${author}`] : book ? ["book", book] : ["q", q!];
   const cacheKey = `lookup:v5:${mode}:${key.toLowerCase().slice(0, 200)}`;
-  const cached = await env.LINKS_KV.get(cacheKey, "json");
+  const cached = debug ? null : await env.LINKS_KV.get(cacheKey, "json");
   if (cached) return Response.json(cached);
 
   let result: object;
@@ -67,6 +95,10 @@ export async function GET(request: Request) {
     const results = await searchBooks(q!, 8, opts);
     result = { results };
     empty = !results.length;
+  }
+  if (debug) {
+    const setup = { isbndbKey: opts.isbndbKey ? "set" : "missing", isbndbHost: opts.isbndbHost || "api2.isbndb.com (default)", googleKey: opts.googleApiKey ? "set" : "missing" };
+    return Response.json({ ...result, debug: { setup, calls } });
   }
   await env.LINKS_KV.put(cacheKey, JSON.stringify(result), { expirationTtl: empty ? HOUR : WEEK });
   return Response.json(result);
