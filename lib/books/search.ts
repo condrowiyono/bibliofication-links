@@ -50,7 +50,7 @@ export async function searchBooks(query: string, limit = 8, opts: LookupOptions 
   }
   const f: Fetcher = opts.fetch ?? fetch;
   // ISBNdb first; Google Books and Open Library only when it has nothing (or there's no key).
-  const fromIsbndb = (await isbndbSearch(f, q, limit, opts.isbndbKey)).filter((r) => r.title);
+  const fromIsbndb = (await isbndbSearch(f, q, limit, opts.isbndbKey, opts.isbndbHost)).filter((r) => r.title);
   const lists = fromIsbndb.length
     ? [fromIsbndb]
     : [[], ...(await Promise.all([googleSearch(f, q, limit, opts.googleApiKey), openLibrarySearch(f, q, limit)]))];
