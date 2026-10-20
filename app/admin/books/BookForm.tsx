@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import type { BookInfo } from "@/lib/bookLookup";
+import type { BookInfo } from "@/lib/books/types";
 import { BOOK_STATUSES, STATUS_LABEL, type Book, type BookStatus } from "@/lib/site";
 import { DetailActions, FormErrors } from "../_components/DetailActions";
 import { FormField, SwitchRow } from "../_components/FormField";

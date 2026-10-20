@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import { BookOpen, Loader2, Search } from "lucide-react";
-import type { CoverOption } from "@/lib/bookCovers";
-import type { BookInfo } from "@/lib/bookLookup";
+import type { BookInfo, CoverOption } from "@/lib/books/types";
 import type { Book } from "@/lib/site";
 import { Input } from "@/components/ui/input";
 
@@ -20,6 +19,12 @@ type Details = { book: BookInfo | null; covers: CoverOption[] };
 export async function fetchBookAndCovers(c: { isbn13?: string; title: string; author?: string }): Promise<Details> {
   const book = c.isbn13 || `${c.title} ${c.author ?? ""}`.trim();
   return api<Details>({ book });
+}
+
+/** Step 2 only: every cover found for the book's ISBN, or for its title and author when it has none. */
+export async function fetchCovers(c: { isbn13?: string; title: string; author?: string }): Promise<CoverOption[]> {
+  const params: Record<string, string> = c.isbn13 ? { covers: c.isbn13 } : { covers: c.title.trim(), author: c.author ?? "" };
+  return (await api<{ covers: CoverOption[] }>(params)).covers;
 }
 
 export async function fetchBookDetails(c: { isbn13?: string; title: string; author?: string }): Promise<BookInfo | null> {
