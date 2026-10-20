@@ -5,9 +5,9 @@ export type Fetcher = typeof fetch;
 export const UA = "Mozilla/5.0 (compatible; BeyLinksBookLookup/1.0; +https://bethanielle.me)";
 const TIMEOUT_MS = 7000;
 
-export async function getJson<T>(f: Fetcher, url: string): Promise<T | null> {
+export async function getJson<T>(f: Fetcher, url: string, headers: Record<string, string> = {}): Promise<T | null> {
   try {
-    const res = await f(url, { headers: { "user-agent": UA, accept: "application/json" }, signal: AbortSignal.timeout(TIMEOUT_MS) });
+    const res = await f(url, { headers: { "user-agent": UA, accept: "application/json", ...headers }, signal: AbortSignal.timeout(TIMEOUT_MS) });
     if (!res.ok) return null;
     return (await res.json()) as T;
   } catch {

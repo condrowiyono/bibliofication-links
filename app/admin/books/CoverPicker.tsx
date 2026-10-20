@@ -4,10 +4,10 @@ import * as React from "react";
 import { Check, ImageIcon, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { CoverOption } from "@/lib/bookCovers";
+import type { CoverOption } from "@/lib/books/types";
 import { cn } from "@/lib/utils";
 import { ResponsiveDialog } from "../_components/ResponsiveDialog";
-import { fetchBookAndCovers } from "./BookFinder";
+import { fetchCovers } from "./BookFinder";
 
 /**
  * "Choose cover": looks the book up and shows every cover found (Gramedia, Goodreads, Amazon,
@@ -33,7 +33,7 @@ export function CoverPicker({
     setOpen(true);
     setState({ status: "loading", covers: [] });
     try {
-      const { covers } = await fetchBookAndCovers(book);
+      const covers = await fetchCovers(book);
       setState({ status: "done", covers });
     } catch (e) {
       setState({ status: "error", covers: [], error: (e as Error).message });
