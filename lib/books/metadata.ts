@@ -1,13 +1,13 @@
 /**
  * Step 1: ISBN → book details.
  *
- * Asks ISBNdb (with a key), Google Books, Gramedia and Open Library at the same time, the way the
- * ISBN-Lookup project does (github.com/ImranR98/ISBN-Lookup), drops answers about a different book,
- * then merges them. ISBNdb is the authority:
- * - every field ISBNdb has, ISBNdb's value is used (title and synopsis included)
- * - the others only fill what ISBNdb leaves empty, in the order Google Books, Gramedia, Open Library
- * - without ISBNdb: the longest title and synopsis (as ISBN-Lookup does: short titles are often cut off)
- * - first published: the earliest year any source knows (ISBNdb only knows the edition's year)
+ * With an ISBNdb key: ISBNdb is the only source of details (title, author, publisher, year, pages,
+ * language, synopsis). Gramedia's and Goodreads' pages are read too, only for store links and covers.
+ *
+ * Without a key, as in ISBN-Lookup (github.com/ImranR98/ISBN-Lookup): Google Books, Gramedia and Open
+ * Library are asked at once, answers about a different book are dropped, the longest title and synopsis
+ * win, the first-published year is the earliest any source knows, and other fields come from the first
+ * source that has them.
  */
 import { parseIsbn, toIsbn10, toIsbn13 } from "../isbn";
 import type { Fetcher } from "./http";
@@ -79,19 +79,12 @@ export function mergeRecords(records: SourceRecord[], isbn: string, firstPublish
   };
 }
 
-/** The fields that make ISBNdb's answer complete enough to skip the other catalogues. */
-const MAIN_FIELDS = ["title", "authors", "publisher", "edition", "pages", "language", "synopsis"] as const;
-const missing = (r: SourceRecord) => MAIN_FIELDS.filter((k) => (Array.isArray(r[k]) ? !r[k].length : !r[k]));
-
 /**
  * Accepts an ISBN-10 or ISBN-13, with or without dashes. Returns null for an invalid ISBN or when no source knows it.
  *
- * ISBNdb is asked first. When it knows the book and fills every main field, that's the answer and
- * Google Books and Open Library aren't asked. When it doesn't know the book (or there's no key) or
- * leaves fields empty, they're asked and fill only the gaps. Gramedia and Goodreads are always read
- * alongside ISBNdb, because their store links and covers need their pages anyway; Gramedia's details
- * also fill gaps. The year the work first came out comes from Open Library's index (ISBNdb only knows
- * the edition's year).
+ * With an ISBNdb key, the details are ISBNdb's alone: when ISBNdb doesn't know the ISBN, the answer is null.
+ * Gramedia and Goodreads are read alongside it only for their store links and covers, and only when they
+ * show the same book. Without a key, Google Books, Gramedia and Open Library answer instead and are merged.
  */
 export async function lookupIsbn(input: string, opts: LookupOptions = {}): Promise<MetadataResult | null> {
   const f: Fetcher = opts.fetch ?? fetch;
@@ -99,28 +92,32 @@ export async function lookupIsbn(input: string, opts: LookupOptions = {}): Promi
   if (!isbn) return null;
   const isbn13 = toIsbn13(isbn);
 
-  // 1. ISBNdb, with the store pages and the first-published year alongside.
+  // With an ISBNdb key, the details come from ISBNdb only. Gramedia and Goodreads are still read,
+  // but only for their store links and covers, and only when they're the same book.
+  const isbndbOnly = !!opts.isbndbKey;
+
+  // 1. ISBNdb, with the store pages (and, without ISBNdb, the first-published year) alongside.
   const [isbndbRaw, gram, gr, firstYear] = await Promise.all([
     isbndbByIsbn(f, isbn13, opts.isbndbKey, opts.isbndbHost),
     gramedia(f, isbn13),
     goodreads(f, isbn13),
-    openLibraryFirstPublished(f, isbn13),
+    isbndbOnly ? Promise.resolve("") : openLibraryFirstPublished(f, isbn13),
   ]);
   const isbndb = isbndbRaw?.title && (!isbndbRaw.isbn13 || isbndbRaw.isbn13 === isbn13) ? isbndbRaw : null;
+  if (isbndbOnly && !isbndb) return null;
 
-  // 2. The other catalogues, only for what ISBNdb doesn't have.
-  const needFallback = !isbndb || missing(isbndb).length > 0;
-  const [google, ol] = needFallback
-    ? await Promise.all([googleByIsbn(f, isbn13, opts.googleApiKey), openLibraryByIsbn(f, isbn13)])
-    : [null, null];
+  // 2. Without an ISBNdb key: the other catalogues.
+  const [google, ol] = isbndbOnly ? [null, null] : await Promise.all([googleByIsbn(f, isbn13, opts.googleApiKey), openLibraryByIsbn(f, isbn13)]);
 
-  const records = sameBookOnly(
+  const checked = sameBookOnly(
     [isbndb, google, gram, ol].filter((r): r is SourceRecord => !!r && !!r.title),
     isbn13,
   );
+  // Gramedia passing the same-book check still only counts for links and covers when ISBNdb is the source.
+  const records = isbndbOnly ? [isbndb!] : checked;
   if (!records.length) return null;
   // Gramedia or Goodreads answering about another book: keep neither their links nor their covers.
-  const gramOk = !!gram && records.includes(gram);
+  const gramOk = !!gram && checked.includes(gram);
   const grOk = !!gr && (!gr.title || records.some((r) => sameTitle(r.title, gr.title!)));
   const merged = mergeRecords(records, isbn13, firstYear);
   const hints: Hints = {
