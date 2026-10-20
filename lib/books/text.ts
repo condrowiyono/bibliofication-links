@@ -83,3 +83,18 @@ export function parseMeta(html: string, property: string): string {
   const re2 = new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+(?:property|name)=["']${property}["']`, "i");
   return decodeEntities(html.match(re)?.[1] ?? html.match(re2)?.[1] ?? "").trim();
 }
+
+// Words too common to tell two titles apart (English and Indonesian).
+const STOP = new Set(["the", "a", "an", "of", "and", "to", "in", "on", "for", "dan", "di", "ke", "dari", "yang", "sang", "si", "edisi", "cover", "baru", "new", "edition"]);
+const words = (s: string) => norm(s.split(/[:(]/)[0]).split(" ").filter((w) => w && !STOP.has(w));
+
+/**
+ * True when two titles name the same book: most words of the shorter title appear in the longer.
+ * "Ronggeng Dukuh Paruk (Cover Baru)" matches "Ronggeng dukuh paruk"; "Laut Bercerita" doesn't match "Pulang".
+ */
+export function sameTitle(a: string, b: string): boolean {
+  const [x, y] = [words(a), words(b)];
+  if (!x.length || !y.length) return false;
+  const [short, long] = x.length <= y.length ? [x, new Set(y)] : [y, new Set(x)];
+  return short.filter((w) => long.has(w)).length / short.length >= 0.6;
+}

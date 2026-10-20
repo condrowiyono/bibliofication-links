@@ -16,7 +16,7 @@ import { fullSizeGoodreads, goodreads } from "./sources/goodreads";
 import { googleByIsbn, googleLargeCover } from "./sources/googleBooks";
 import { gramedia } from "./sources/gramedia";
 import { openLibraryCoverUrl } from "./sources/openLibrary";
-import { parseOgImage } from "./text";
+import { parseOgImage, sameTitle } from "./text";
 import type { CoverOption, CoverSource, LookupOptions } from "./types";
 
 export type CoverQuery = { isbn13?: string; isbn10?: string; title?: string; author?: string };
@@ -28,18 +28,25 @@ const one = (url: string | undefined | null, source: CoverSource, exact: boolean
 
 async function fromGramedia(f: Fetcher, q: CoverQuery, h: Hints): Maybe {
   if (h.gramediaCover) return one(h.gramediaCover, "Gramedia", true);
-  if (h.gramediaUrl) return []; // step 1 already read the product page and found no photo
+  if (h.gramediaUrl !== undefined) return []; // step 1 already checked Gramedia: no photo, or another book
   const query = q.isbn13 || `${q.title ?? ""} ${q.author ?? ""}`.trim();
   if (!query) return [];
-  return one((await gramedia(f, query))?.cover, "Gramedia", !!q.isbn13);
+  const r = await gramedia(f, query);
+  if (!r?.cover) return [];
+  // Gramedia's search can return another product. Same ISBN: this edition. No ISBN on the page: only with a matching title.
+  if (q.isbn13 && r.isbn13) return r.isbn13 === q.isbn13 ? one(r.cover, "Gramedia", true) : [];
+  // No ISBN to compare: keep it only when the titles match, as a possible other edition.
+  return q.title && r.title && sameTitle(q.title, r.title) ? one(r.cover, "Gramedia", false) : [];
 }
 
 async function fromGoodreads(f: Fetcher, q: CoverQuery, h: Hints): Maybe {
   if (h.goodreadsImage) return one(h.goodreadsImage, "Goodreads", !!q.isbn13);
+  if (h.goodreadsUrl === "") return []; // step 1 already checked Goodreads: another book
   let url = h.goodreadsUrl;
   if (!url) {
     const query = q.isbn13 || `${q.title ?? ""} ${q.author ?? ""}`.trim();
-    const hit = query ? await goodreads(f, query) : null;
+    let hit = query ? await goodreads(f, query) : null;
+    if (hit && q.title && hit.title && !sameTitle(q.title, hit.title)) hit = null;
     if (hit?.image) return one(hit.image, "Goodreads", !!q.isbn13);
     url = hit?.url;
   }

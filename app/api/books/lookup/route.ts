@@ -8,7 +8,7 @@ import { parseIsbn, toIsbn13 } from "@/lib/isbn";
  *
  *   ?isbn=<ISBN>                      step 1: details from ISBNdb, Google Books, Gramedia and Open Library
  *                                     → { book, records } (records = each source's own answer)
- *   ?covers=<ISBN or title>&author=   step 2: covers from Gramedia, Goodreads, Amazon, Apple Books,
+ *   ?covers=<ISBN or title>&title=&author=   step 2: covers from Gramedia, Goodreads, Amazon, Apple Books,
  *                                     Google Books, Open Library and the Bookcover API → { covers }
  *   ?book=<ISBN or title>             both steps → { book, covers }
  *   ?q=<title or ISBN>                suggestions while typing → { results }
@@ -40,8 +40,9 @@ export async function GET(request: Request) {
   };
 
   const author = get("author") ?? "";
-  const [mode, key] = isbn ? ["isbn", isbn] : covers ? ["covers", `${covers}|${author}`] : book ? ["book", book] : ["q", q!];
-  const cacheKey = `lookup:v4:${mode}:${key.toLowerCase().slice(0, 200)}`;
+  const title = get("title") ?? "";
+  const [mode, key] = isbn ? ["isbn", isbn] : covers ? ["covers", `${covers}|${title}|${author}`] : book ? ["book", book] : ["q", q!];
+  const cacheKey = `lookup:v5:${mode}:${key.toLowerCase().slice(0, 200)}`;
   const cached = await env.LINKS_KV.get(cacheKey, "json");
   if (cached) return Response.json(cached);
 
@@ -53,7 +54,8 @@ export async function GET(request: Request) {
     empty = !r;
   } else if (covers) {
     const coverIsbn = parseIsbn(covers);
-    const query = coverIsbn ? { isbn13: toIsbn13(coverIsbn) } : { title: covers, author };
+    // With an ISBN, the title (when given) lets step 2 check that store results are this book.
+    const query = coverIsbn ? { isbn13: toIsbn13(coverIsbn), title: title || undefined, author } : { title: covers, author };
     const list = await findCovers(query, opts);
     result = { covers: list };
     empty = !list.length;

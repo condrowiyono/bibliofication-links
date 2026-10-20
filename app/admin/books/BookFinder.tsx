@@ -3,6 +3,8 @@
 import * as React from "react";
 import { BookOpen, Loader2, Search } from "lucide-react";
 import type { BookInfo, CoverOption } from "@/lib/books/types";
+import { sameTitle } from "@/lib/books/text";
+import { editionFlag } from "@/lib/editionFlag";
 import type { Book } from "@/lib/site";
 import { Input } from "@/components/ui/input";
 
@@ -23,7 +25,9 @@ export async function fetchBookAndCovers(c: { isbn13?: string; title: string; au
 
 /** Step 2 only: every cover found for the book's ISBN, or for its title and author when it has none. */
 export async function fetchCovers(c: { isbn13?: string; title: string; author?: string }): Promise<CoverOption[]> {
-  const params: Record<string, string> = c.isbn13 ? { covers: c.isbn13 } : { covers: c.title.trim(), author: c.author ?? "" };
+  const params: Record<string, string> = c.isbn13
+    ? { covers: c.isbn13, title: c.title.trim(), author: c.author ?? "" }
+    : { covers: c.title.trim(), author: c.author ?? "" };
   return (await api<{ covers: CoverOption[] }>(params)).covers;
 }
 
@@ -41,6 +45,22 @@ export function fillMissing(book: Book, found: BookInfo): Partial<Book> {
   const extra = found.links.filter((l) => !have.has(l.label.split(" ")[0].toLowerCase()));
   if (extra.length) patch.links = [...book.links.filter((l) => l.url), ...extra];
   return patch;
+}
+
+/**
+ * The full details when they're about the book she tapped (same ISBN, or the same title when the
+ * suggestion had no ISBN), with the suggestion filling anything they lack. Otherwise the suggestion
+ * as it was, so tapping one book never fills in another.
+ */
+export function sameBookOrPicked(picked: BookInfo, found: BookInfo | null): BookInfo {
+  if (!found) return picked;
+  const same = picked.isbn13 ? found.isbn13 === picked.isbn13 : sameTitle(picked.title, found.title);
+  if (!same) return picked;
+  const out = { ...found };
+  for (const k of ["title", "author", "cover", "synopsis", "isbn10", "publisher", "published", "edition", "language"] as const) out[k] ||= picked[k];
+  out.pages ||= picked.pages;
+  if (!out.links.length) out.links = picked.links;
+  return out;
 }
 
 /** Search box with suggestions as you type. Picking one fetches the full details and hands them to onPick. */
@@ -78,7 +98,7 @@ export function BookFinder({ onPick }: { onPick: (b: BookInfo) => void }) {
     setStatus("loading");
     setMessage(`Getting details and store links for "${b.title}"…`);
     try {
-      onPick((await fetchBookDetails(b)) ?? b);
+      onPick(sameBookOrPicked(b, await fetchBookDetails(b)));
       setStatus("idle");
       setMessage("");
     } catch (e) {
@@ -124,7 +144,7 @@ export function BookFinder({ onPick }: { onPick: (b: BookInfo) => void }) {
                 <span className="flex min-w-0 flex-col gap-0.5 text-sm">
                   <strong className="line-clamp-2 font-medium">{r.title}</strong>
                   <span className="truncate text-muted-foreground">{[r.author, r.publisher, r.edition || r.published].filter(Boolean).join(" · ")}</span>
-                  {r.isbn13 && <span className="text-xs text-muted-foreground">ISBN {r.isbn13}</span>}
+                  <EditionLine book={r} />
                 </span>
               </button>
             </li>
@@ -132,5 +152,25 @@ export function BookFinder({ onPick }: { onPick: (b: BookInfo) => void }) {
         </ul>
       )}
     </div>
+  );
+}
+
+/** "🇮🇩 Indonesian · ISBN 978…": which edition this is, so translations and originals are easy to tell apart. */
+function EditionLine({ book }: { book: BookInfo }) {
+  const ed = editionFlag(book);
+  if (!ed && !book.isbn13) return null;
+  return (
+    <span className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
+      {ed && (
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+          <span role="img" aria-label={`${ed.label} edition`} className="text-sm leading-none">
+            {ed.flag}
+          </span>
+          {ed.label}
+        </span>
+      )}
+      {ed && book.isbn13 && <span aria-hidden>·</span>}
+      {book.isbn13 && <span className="whitespace-nowrap">ISBN {book.isbn13}</span>}
+    </span>
   );
 }
