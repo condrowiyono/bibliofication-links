@@ -38,42 +38,73 @@ export async function openLibraryByIsbn(f: Fetcher, isbn: string): Promise<Sourc
   return d ? fromOpenLibraryEdition(d, isbn) : null;
 }
 
-type SearchDoc = {
+/** One edition, as Open Library's search returns it in `editions.docs` (fields picked with editions.*). */
+type EditionDoc = {
   title?: string;
   subtitle?: string;
-  author_name?: string[];
   isbn?: string[];
-  first_publish_year?: number;
   publisher?: string[];
+  publish_date?: string[];
   number_of_pages_median?: number;
   language?: string[];
   cover_i?: number;
-  id_goodreads?: string[];
 };
 
+type SearchDoc = {
+  title?: string;
+  author_name?: string[];
+  first_publish_year?: number;
+  id_goodreads?: string[];
+  editions?: { docs?: EditionDoc[] };
+};
+
+/**
+ * A search hit describes the whole work, with every edition's ISBNs and publishers lumped together;
+ * taking the first ISBN from that list gave a Czech ISBN under an English title. So the edition
+ * details (ISBN, title, publisher, language, cover) come only from the one edition Open Library
+ * returns with the hit. Without that edition, the hit carries no ISBN, publisher or cover at all, and
+ * picking it looks the book up by title instead.
+ */
 export function fromOpenLibrarySearch(d: SearchDoc): SourceRecord {
   const r = emptyRecord("Open Library");
-  r.title = joinTitle(d.title, d.subtitle);
+  const e = d.editions?.docs?.[0];
+  r.title = joinTitle(e?.title ?? d.title, e?.subtitle);
   r.authors = d.author_name ?? [];
   r.published = d.first_publish_year ? String(d.first_publish_year) : "";
-  r.publisher = d.publisher?.[0] ?? "";
-  r.pages = d.number_of_pages_median ?? 0;
-  r.language = languageName(d.language?.[0]);
-  const isbns = (d.isbn ?? []).map(cleanIsbn);
+  r.ids = { goodreads: d.id_goodreads?.[0] };
+  if (!e) return r;
+  r.publisher = e.publisher?.[0] ?? "";
+  r.edition = year(e.publish_date?.[0]);
+  r.pages = e.number_of_pages_median ?? 0;
+  r.language = languageName(e.language?.[0]);
+  const isbns = (e.isbn ?? []).map(cleanIsbn);
   const pick = isbns.find(isValidIsbn13) ?? isbns.find(isValidIsbn10);
   if (pick) {
     r.isbn13 = toIsbn13(pick);
-    r.isbn10 = toIsbn10(r.isbn13);
+    r.isbn10 = isbns.find((s) => s.length === 10 && toIsbn13(s) === r.isbn13) ?? toIsbn10(r.isbn13);
   }
-  r.cover = d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg` : undefined;
-  r.ids = { goodreads: d.id_goodreads?.[0] };
+  r.cover = e.cover_i ? `https://covers.openlibrary.org/b/id/${e.cover_i}-L.jpg` : undefined;
   return r;
 }
 
-const FIELDS = "title,subtitle,author_name,isbn,first_publish_year,publisher,number_of_pages_median,language,cover_i,id_goodreads";
+const FIELDS = [
+  "title",
+  "author_name",
+  "first_publish_year",
+  "id_goodreads",
+  "editions",
+  "editions.title",
+  "editions.subtitle",
+  "editions.isbn",
+  "editions.publisher",
+  "editions.publish_date",
+  "editions.language",
+  "editions.cover_i",
+].join(",");
 
-export async function openLibrarySearch(f: Fetcher, q: string, limit: number): Promise<SourceRecord[]> {
-  const data = await getJson<{ docs?: SearchDoc[] }>(f, `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=${limit}&fields=${FIELDS}`);
+/** `lang=en`: when a work has an English edition, that's the edition returned with the hit. */
+export async function openLibrarySearch(f: Fetcher, q: string, limit: number, lang = "en"): Promise<SourceRecord[]> {
+  const data = await getJson<{ docs?: SearchDoc[] }>(f, `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=${limit}&lang=${lang}&fields=${FIELDS}`);
   return (data?.docs ?? []).map(fromOpenLibrarySearch);
 }
 

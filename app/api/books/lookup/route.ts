@@ -70,7 +70,7 @@ export async function GET(request: Request) {
   const author = get("author") ?? "";
   const title = get("title") ?? "";
   const [mode, key] = isbn ? ["isbn", isbn] : covers ? ["covers", `${covers}|${title}|${author}`] : book ? ["book", book] : ["q", q!];
-  const cacheKey = `lookup:v5:${mode}:${key.toLowerCase().slice(0, 200)}`;
+  const cacheKey = `lookup:v6:${mode}:${key.toLowerCase().slice(0, 200)}`;
   const cached = debug ? null : await env.LINKS_KV.get(cacheKey, "json");
   if (cached) return Response.json(cached);
 

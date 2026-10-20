@@ -49,9 +49,9 @@ export async function searchBooks(query: string, limit = 8, opts: LookupOptions 
     return r ? [r.book] : [];
   }
   const f: Fetcher = opts.fetch ?? fetch;
-  // ISBNdb first; Google Books and Open Library only when it has nothing (or there's no key).
+  // With an ISBNdb key: ISBNdb's results only. Without one: Google Books and Open Library.
   const fromIsbndb = (await isbndbSearch(f, q, limit, opts.isbndbKey, opts.isbndbHost)).filter((r) => r.title);
-  const lists = fromIsbndb.length
+  const lists = opts.isbndbKey
     ? [fromIsbndb]
     : [[], ...(await Promise.all([googleSearch(f, q, limit, opts.googleApiKey), openLibrarySearch(f, q, limit)]))];
   // ISBNdb's results as they come; otherwise Google Books and Open Library interleaved. Duplicates merged.
