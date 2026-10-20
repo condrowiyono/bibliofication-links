@@ -49,11 +49,17 @@ export async function searchBooks(query: string, limit = 8, opts: LookupOptions 
     return r ? [r.book] : [];
   }
   const f: Fetcher = opts.fetch ?? fetch;
-  const lists = await Promise.all([isbndbSearch(f, q, limit, opts.isbndbKey), googleSearch(f, q, limit, opts.googleApiKey), openLibrarySearch(f, q, limit)]);
-  // Interleave the sources so each gets a say in the first few suggestions; merge duplicates.
+  // ISBNdb first; Google Books and Open Library only when it has nothing (or there's no key).
+  const fromIsbndb = (await isbndbSearch(f, q, limit, opts.isbndbKey)).filter((r) => r.title);
+  const lists = fromIsbndb.length
+    ? [fromIsbndb]
+    : [[], ...(await Promise.all([googleSearch(f, q, limit, opts.googleApiKey), openLibrarySearch(f, q, limit)]))];
+  // ISBNdb's results as they come; otherwise Google Books and Open Library interleaved. Duplicates merged.
+  const [isbndb, ...others] = lists;
   const byKey = new Map<string, SourceRecord>();
-  for (let i = 0; i < Math.max(0, ...lists.map((l) => l.length)); i++)
-    for (const list of lists) {
+  for (const r of isbndb) if (r.title) byKey.set(keyOf(r), byKey.has(keyOf(r)) ? fill(byKey.get(keyOf(r))!, r) : r);
+  for (let i = 0; i < Math.max(0, ...others.map((l) => l.length)); i++)
+    for (const list of others) {
       const r = list[i];
       if (!r?.title) continue;
       const k = keyOf(r);

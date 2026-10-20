@@ -9,11 +9,11 @@ export function fullSizeGoodreads(url: string): string {
 }
 
 /** The book page and its cover, from the first autocomplete hit. Goodreads' "no photo" placeholder is skipped. */
-export function parseGoodreadsAutocomplete(hits: Hit[] | null): { url: string; image?: string } | null {
+export function parseGoodreadsAutocomplete(hits: Hit[] | null): { url: string; image?: string; title?: string } | null {
   const hit = hits?.find((h) => h.bookUrl);
   if (!hit?.bookUrl) return null;
   const image = hit.imageUrl && !/nophoto/i.test(hit.imageUrl) ? fullSizeGoodreads(hit.imageUrl) : undefined;
-  return { url: new URL(hit.bookUrl.split("?")[0], "https://www.goodreads.com").toString(), image };
+  return { url: new URL(hit.bookUrl.split("?")[0], "https://www.goodreads.com").toString(), image, title: hit.title };
 }
 
 export async function goodreads(f: Fetcher, query: string) {
